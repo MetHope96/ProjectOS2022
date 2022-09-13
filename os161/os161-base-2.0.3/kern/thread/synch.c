@@ -113,6 +113,7 @@ P(struct semaphore *sem)
 		 * Exercise: how would you implement strict FIFO
 		 * ordering?
 		 */
+
 		wchan_sleep(sem->sem_wchan, &sem->sem_lock);
         }
         KASSERT(sem->sem_count > 0);
@@ -157,6 +158,16 @@ lock_create(const char *name)
 	HANGMAN_LOCKABLEINIT(&lock->lk_hangman, lock->lk_name);
 
         // add stuff here as needed
+        lock->lk_wchan = wchan_create(lock->lk_name);
+        if (lock->lock_wchan == NULL) {
+		        kfree(lock->lk_name);
+		        kfree(lock);
+		        return NULL;
+	      }
+
+        lock->lk_thread = NULL;
+        spinlock_init(&lock->lk_spinlock);
+
 
         return lock;
 }
@@ -167,7 +178,8 @@ lock_destroy(struct lock *lock)
         KASSERT(lock != NULL);
 
         // add stuff here as needed
-
+        spinlock_cleanup(&lock->lk_spinlock);
+	       wchan_destroy(lock->lk_wchan);
         kfree(lock->lk_name);
         kfree(lock);
 }
@@ -180,7 +192,25 @@ lock_acquire(struct lock *lock)
 
         // Write this
 
-        (void)lock;  // suppress warning until code gets written
+        //(void)lock;  // suppress warning until code gets written
+
+        KASSERT(!lock_do_i_hold(lock));
+        spinlock_acquire(&lock->lk_spinlock);
+
+        while (lock->lk_spinlock != NULL){
+          wchan_lock(lock->lk_wchan);
+          spinlock_release(&lock->lk_spinlock);
+          wchan_sleep(lock->lk_wchan);
+          spinlock_acquire(&lock->lk_spinlock);
+        }
+        lock->lk_thread = curthread;
+        spinlock_release(&lock->lk_spinlock);
+
+
+
+
+
+
 
 	/* Call this (atomically) once the lock is acquired */
 	//HANGMAN_ACQUIRE(&curthread->t_hangman, &lock->lk_hangman);
@@ -194,7 +224,13 @@ lock_release(struct lock *lock)
 
         // Write this
 
-        (void)lock;  // suppress warning until code gets written
+        //(void)lock;  // suppress warning until code gets written
+
+        KASSERT(lock_do_i_hold(lock));
+        spinlock_acquire(&lock->lk_spinlock);
+        lock->lk_thread = NULL;
+        wchan_wakeone(lock->lk_wchan);
+        spinlock_release(&lock->lk_spinlock);
 }
 
 bool
@@ -202,9 +238,17 @@ lock_do_i_hold(struct lock *lock)
 {
         // Write this
 
-        (void)lock;  // suppress warning until code gets written
+        //(void)lock;  // suppress warning until code gets written
 
-        return true; // dummy until code gets written
+        //return true; // dummy until code gets written
+        if (lock->lk_thread == NULL){
+          return false;
+        }
+        else if (lock->lk_thread == curthread) {
+	         return true;
+	      } else {
+	         return false;
+	      }
 }
 
 ////////////////////////////////////////////////////////////
