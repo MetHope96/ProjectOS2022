@@ -55,14 +55,6 @@ struct cpu;
 /* Macro to test if two addresses are on the same kernel stack */
 #define SAME_STACK(p1, p2)     (((p1) & STACK_MASK) == ((p2) & STACK_MASK))
 
-struct file_table {
-	char *name;
-	int flags;
-	off_t offset;
-	int ref_count;
-	struct lock * lock;
-	struct vnode * vn;
-};
 
 /* States a thread can be in. */
 typedef enum {
@@ -113,12 +105,9 @@ struct thread {
 	/*
 	 * Public fields
 	 */
-	 struct file_handle * t_fdtable[OPEN_MAX];
+
 	/* add more here as needed */
 };
-
-
-
 
 /*
  * Array of threads.
