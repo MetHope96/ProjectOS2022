@@ -71,6 +71,7 @@ struct proc {
 	struct vnode *p_cwd;		/* current working directory */
 
 	/* add more material here as needed */
+	struct file_handle *file_table[OPEN_MAX];
 };
 
 
