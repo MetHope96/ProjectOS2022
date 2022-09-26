@@ -37,6 +37,8 @@
  */
 
 #include <spinlock.h>
+#include <kern/file_syscall.h>
+#include <limits.h>
 
 struct addrspace;
 struct thread;
