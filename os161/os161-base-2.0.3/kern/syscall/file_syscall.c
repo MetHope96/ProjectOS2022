@@ -128,6 +128,33 @@ int sys_read(int fd, void *buff, size_t buff_len){
 }
 
 int sys_write(int fd, const void *buff, size_t buff_len){
+  int err;
+  if (fd < 0 || fd >= OPEN_MAX || curproc->file_table[fd] == NULL){
+    return EBADF; //Fd is not a valid file descriptor
+  }
+
+  char *buffer = (char *)kmalloc(sizeof(*buff)*buff_len);
+  err = copyin((const_userptr_t)buff, buffer, buff_len);
+  if(err) {
+    kfree(buffer);
+    return err;
+  }
+
+  struct iovec iov;
+  struct uio kuio;
+
+  lock_acquire(curproc->file_table[fd]->lock);
+  uio_kinit(&iov, &kuio, buffer, buff_len, curproc->file_table[fd]->offset, UIO_WRITE);
+
+  err = VOP_WRITE (curproc->file_table[fd]->vnode, &kuio);
+  if (err){
+    kfree(buffer);
+    return err;
+  }
+
+  curproc->file_table[fd]->offset = kuio.uio_offset;
+  lock_release(curproc->file_table[fd]->lock);
+  kfree(buffer);
   return 0;
 }
 
