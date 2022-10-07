@@ -1,0 +1,5 @@
+{
+    "files.associations": {
+        "file_syscall.h": "c"
+    }
+}
