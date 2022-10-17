@@ -15,11 +15,11 @@
 #include <stat.h>
 #include <copyinout.h>
 
-int sys_open(const char *filename, int flags){
+int sys_open(const char *filename, int flags, int *retval){
   char file_name[__NAME_MAX];
   bool append = false; // This is 0 if is not open in append mode
   int err = 0;
-  size_t len;
+  size_t len = __NAME_MAX;
   size_t actual;
 
   if (file_name == NULL){
@@ -51,7 +51,7 @@ int sys_open(const char *filename, int flags){
         return err;
   }
 
-  int i;
+  int i=3;
 
     while (curproc->file_table[i] != NULL){
       if (i == OPEN_MAX-1){
@@ -93,7 +93,7 @@ int sys_open(const char *filename, int flags){
     	kfree(curproc->file_table[i]);
     	curproc->file_table[i] = NULL;
     }
-
+      *retval = i;
     	return 0;
 }
 

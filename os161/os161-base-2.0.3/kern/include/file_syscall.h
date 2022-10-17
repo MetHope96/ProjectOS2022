@@ -9,7 +9,7 @@ struct file_handle {
         struct vnode *vnode; // create a struct vnode
 };
 
-int sys_open(const char *filename, int flags);
+int sys_open(const char *filename, int flags, int *retval);
 int sys_read(int fd, void *buff, size_t buff_len);
 int sys_write(int fd, const void *buff, size_t buff_len);
 int sys_lseek(int fd, off_t pos, int whence);
