@@ -50,6 +50,14 @@
 #include <vnode.h>
 #include <test.h>
 
+#include <proc.h>
+#include <current.h>
+#include <kern/unistd.h>
+#include <endian.h>
+#include <limits.h>
+#include <stat.h>
+#include <copyinout.h>
+
 #define SLOGAN   "HODIE MIHI - CRAS TIBI\n"
 #define FILENAME "fstest.tmp"
 #define NCHUNKS  720
@@ -782,3 +790,178 @@ printfile(int nargs, char **args)
 
 	return 0;
 }
+
+/*
+int sym_open(char *filename, int flags, int *retval){
+  char file_name[__ARG_MAX];
+  bool append = false; // This is 0 if is not open in append mode
+  int err = 0;
+  size_t len = __ARG_MAX;
+  size_t actual;
+
+  if (filename == NULL){
+    err = EFAULT; // File name was an invalid pointer
+    return err;
+  }
+
+  switch(flags){ // Check if there are a valid flags
+    case O_RDONLY:
+      break;
+    case O_WRONLY:
+      break;
+    case O_RDWR:
+      break;
+    case O_RDONLY|O_CREAT:
+      break;
+    case O_WRONLY|O_CREAT:
+      break;
+    case O_WRONLY|O_APPEND:
+      append = true;
+      break;
+    case O_RDWR|O_CREAT:
+      break;
+    case O_RDWR|O_APPEND:
+      append = true;
+      break;
+    default:
+      err = EINVAL; // Flags contain invalid values
+        return err;
+  }
+
+  int i=3;
+
+    while (curproc->file_table[i] != NULL){
+      if (i == OPEN_MAX-1){
+        return EMFILE; //The process's file table was full, or a process-specific limit on open files was reached.
+      }
+      i++;
+    }
+
+	err = copyinstr((const_userptr_t)&filename, file_name, len, &actual);
+    if (err ){
+      return err;
+    }
+    curproc->file_table[i] = (struct file_handle *)kmalloc(sizeof(struct file_handle));
+    err = vfs_open(filename, flags, 0, &curproc->file_table[i]->vnode);
+    if (err){
+      kfree(curproc->file_table[i]);
+      curproc->file_table[i]=NULL;
+      return err;
+    }
+
+    if(append){ // The file is open in append mode
+      struct stat statbuf;
+      err = VOP_STAT(curproc->file_table[i]->vnode, &statbuf);
+      if (err){
+        kfree (curproc->file_table[i]);
+        curproc->file_table[i] = NULL;
+        return err;
+      }
+      curproc->file_table[i]->offset = statbuf.st_size;
+
+    } else { //The file isn't open in append mode
+    curproc->file_table[i]->offset = 0;
+    }
+
+    curproc->file_table[i]->lock = lock_create("lock_fh"); //Create a lock for a file_handle
+    if(curproc->file_table[i]->lock == NULL) {
+      vfs_close(curproc->file_table[i]->vnode);
+    	kfree(curproc->file_table[i]);
+    	curproc->file_table[i] = NULL;
+    }
+      *retval = i;
+    	return 0;
+}
+
+int sym_close(int fd){
+  if (fd < 0 || fd >= OPEN_MAX || curproc->file_table[fd] == NULL){
+    return EBADF; // Fd is not a valid file descriptor
+  }
+
+  lock_destroy(curproc->file_table[fd]->lock);
+  vfs_close(curproc->file_table[fd]->vnode);
+  kfree(curproc->file_table[fd]);
+	curproc->file_table[fd] = NULL;
+  return 0;
+}
+
+int sym_write(int fd, const void *buff, size_t buff_len){
+  int err;
+  if (fd < 0 || fd >= OPEN_MAX || curproc->file_table[fd] == NULL){
+    return EBADF; //Fd is not a valid file descriptor
+  }
+
+  char *buffer = (char *)kmalloc(sizeof(*buff)*buff_len);
+  err = copyin((const_userptr_t)buff, buffer, buff_len);
+  if(err) {
+    kfree(buffer);
+    return err;
+  }
+
+  struct iovec iov;
+  struct uio kuio;
+
+  lock_acquire(curproc->file_table[fd]->lock);
+  uio_kinit(&iov, &kuio, buffer, buff_len, curproc->file_table[fd]->offset, UIO_WRITE);
+
+  err = VOP_WRITE (curproc->file_table[fd]->vnode, &kuio);
+  if (err){
+    kfree(buffer);
+    return err;
+  }
+
+  curproc->file_table[fd]->offset = kuio.uio_offset;
+  lock_release(curproc->file_table[fd]->lock);
+  kfree(buffer);
+  return 0;
+}
+
+int sym_read(int fd, void *buff, size_t buff_len){
+  int err;
+  if (fd < 0 || fd >= OPEN_MAX || curproc->file_table[fd] == NULL){
+    return EBADF; // Fd is not a valid file descriptor
+  }
+
+  if (buff == NULL){
+    return EFAULT; // Part or all of the address space pointed to by buf is invalid.
+  }
+
+  char *buffer = (char *)kmalloc(sizeof(*buff)*buff_len);
+
+  struct iovec iov;
+  struct uio kuio;
+  lock_acquire (curproc->file_table[fd]->lock);
+  uio_kinit(&iov, &kuio, buffer, buff_len, curproc->file_table[fd]->offset, UIO_READ);
+
+  err = VOP_READ(curproc->file_table[fd]->vnode, &kuio);
+  if (err){
+	 lock_release(curproc->file_table[fd]->lock);
+	 kfree(buffer);
+	 return err;
+  }
+
+  curproc->file_table[fd]->offset = kuio.uio_offset;
+  lock_release(curproc->file_table[fd]->lock);
+  kfree(buffer);
+  return 0;
+}
+
+int test_open(int nargs, char **args){
+
+	(void) nargs;
+	(void) args;
+
+	char file_name[__NAME_MAX] = "prova.txt"; 
+	int fd;
+	int flags = O_WRONLY|O_CREAT;
+	int err;
+	//char mes[100]; 
+	//size_t buff_len = 5*8;
+
+	err = sym_open(file_name, flags, &fd);
+	//err = sym_read(fd,(void *)mes, buff_len);
+	err = sym_close(fd);
+	
+    return err;
+}
+*/

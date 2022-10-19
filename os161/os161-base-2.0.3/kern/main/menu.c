@@ -709,8 +709,9 @@ static struct {
 	{ "fs6",	createstress },
 
 	/* file open*/
-	{ "fo1",	test_open },
-
+	{ "fo1",	opentest },
+	//{ "fo1",	test_open },
+	
 	{ NULL, NULL }
 };
 

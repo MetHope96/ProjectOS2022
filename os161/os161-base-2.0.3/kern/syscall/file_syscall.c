@@ -15,17 +15,9 @@
 #include <stat.h>
 #include <copyinout.h>
 
-int sys_open(const char *filename, int flags, int *retval){
-  char file_name[__NAME_MAX];
+int sys_open(char *filename, int flags, int *retval){
   bool append = false; // This is 0 if is not open in append mode
   int err = 0;
-  size_t len = __NAME_MAX;
-  size_t actual;
-
-  if (file_name == NULL){
-    err = EFAULT; // File name was an invalid pointer
-    return err;
-  }
 
   switch(flags){ // Check if there are a valid flags
     case O_RDONLY:
@@ -59,14 +51,10 @@ int sys_open(const char *filename, int flags, int *retval){
       }
       i++;
     }
-
-    err = copyinstr((const_userptr_t)filename, file_name, len, &actual);
-    if (err){
-      return err;
-    }
-
+   
     curproc->file_table[i] = (struct file_handle *)kmalloc(sizeof(struct file_handle));
-    err = vfs_open(file_name, flags, 0, &curproc->file_table[i]->vnode);
+    err = vfs_open(filename, flags, 0, &curproc->file_table[i]->vnode);
+
     if (err){
       kfree(curproc->file_table[i]);
       curproc->file_table[i]=NULL;
@@ -158,10 +146,6 @@ int sys_write(int fd, const void *buff, size_t buff_len){
   return 0;
 }
 
-int sys_lseek(int fd, off_t pos, int whence){
-  return 0;
-}
-
 int sys_close(int fd){
   if (fd < 0 || fd >= OPEN_MAX || curproc->file_table[fd] == NULL){
     return EBADF; // Fd is not a valid file descriptor
@@ -171,6 +155,11 @@ int sys_close(int fd){
   vfs_close(curproc->file_table[fd]->vnode);
   kfree(curproc->file_table[fd]);
 	curproc->file_table[fd] = NULL;
+  return 0;
+}
+
+/*
+int sys_lseek(int fd, off_t pos, int whence){
   return 0;
 }
 
@@ -185,3 +174,4 @@ int sys_chdir(const char *pathname){
 int sys_getcwd(char *buff, size_t buff_len){
   return 0;
 }
+*/
