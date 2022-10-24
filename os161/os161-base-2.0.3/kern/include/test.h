@@ -105,6 +105,13 @@ void menu(char *argstr);
 void kmain(char *bootstring);
 
 /*test function open*/ 
-int test_open(int nargs, char **arg);
+int opentest(int, char **);
+/*
+int sym_open(char *filename, int flags, int *retval);
+int sym_close(int fd);
+int sym_write(int fd, const void *buff, size_t buff_len);
+int sym_read(int fd, void *buff, size_t buff_len);
+int test_open(int, char**);
+*/
 
 #endif /* _TEST_H_ */

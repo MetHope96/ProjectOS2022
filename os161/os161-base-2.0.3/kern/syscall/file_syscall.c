@@ -95,23 +95,25 @@ int sys_read(int fd, void *buff, size_t buff_len){
     return EFAULT; // Part or all of the address space pointed to by buf is invalid.
   }
 
-  char *buffer = (char *)kmalloc(sizeof(*buff)*buff_len);
+  //char *buffer = (char *)kmalloc(sizeof(*buff)*buff_len);
 
   struct iovec iov;
   struct uio kuio;
   lock_acquire (curproc->file_table[fd]->lock);
-  uio_kinit(&iov, &kuio, buffer, buff_len, curproc->file_table[fd]->offset, UIO_READ);
+  
+  //uio_kinit(&iov, &kuio, buffer, buff_len, curproc->file_table[fd]->offset, UIO_READ);
+  uio_kinit(&iov, &kuio, buff, buff_len, curproc->file_table[fd]->offset, UIO_READ);
 
   err = VOP_READ(curproc->file_table[fd]->vnode, &kuio);
   if (err){
 	 lock_release(curproc->file_table[fd]->lock);
-	 kfree(buffer);
+	 //kfree(buffer);
 	 return err;
   }
-
+  
   curproc->file_table[fd]->offset = kuio.uio_offset;
   lock_release(curproc->file_table[fd]->lock);
-  kfree(buffer);
+  //kfree(buffer);
   return 0;
 }
 
@@ -121,28 +123,32 @@ int sys_write(int fd, const void *buff, size_t buff_len){
     return EBADF; //Fd is not a valid file descriptor
   }
 
+  /*
   char *buffer = (char *)kmalloc(sizeof(*buff)*buff_len);
   err = copyin((const_userptr_t)buff, buffer, buff_len);
   if(err) {
     kfree(buffer);
     return err;
   }
-
+  */
+ 
   struct iovec iov;
   struct uio kuio;
 
+  void *buffer = (void *)buff;
   lock_acquire(curproc->file_table[fd]->lock);
+  //uio_kinit(&iov, &kuio, buffer, buff_len, curproc->file_table[fd]->offset, UIO_WRITE);
   uio_kinit(&iov, &kuio, buffer, buff_len, curproc->file_table[fd]->offset, UIO_WRITE);
 
   err = VOP_WRITE (curproc->file_table[fd]->vnode, &kuio);
   if (err){
-    kfree(buffer);
+    //kfree(buffer);
     return err;
   }
 
   curproc->file_table[fd]->offset = kuio.uio_offset;
   lock_release(curproc->file_table[fd]->lock);
-  kfree(buffer);
+  //kfree(buffer);
   return 0;
 }
 

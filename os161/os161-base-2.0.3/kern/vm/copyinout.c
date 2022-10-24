@@ -122,14 +122,14 @@ copycheck(const_userptr_t userptr, size_t len, size_t *stoplen)
 	*stoplen = len;
 
 	bot = (vaddr_t) userptr;
-	top = bot+len-1;
+	top = bot+(len-1);
 
 	if (top < bot) {
 		/* addresses wrapped around */
 		return EFAULT;
 	}
 
-	if (bot >= USERSPACETOP) {
+	if (bot >= USERSPACETOP) {// USERSPACETOP = 2147483648 , 0x80000000
 		/* region is within the kernel */
 		return EFAULT;
 	}
