@@ -14,7 +14,7 @@
 #include <limits.h>
 #include <stat.h>
 #include <copyinout.h>
-
+#include <kern/seek.h>
 int sys_open(char *filename, int flags, int *retfd){
   bool append = false; // This is 0 if is not open in append mode
   int err = 0;
@@ -167,7 +167,7 @@ int sys_close(int fd){
 
 int sys_lseek(int fd, off_t pos, int whence, off_t *retval){
 
-  int err;
+  //int err;
 
   struct stat buffer;
 
@@ -190,11 +190,11 @@ int sys_lseek(int fd, off_t pos, int whence, off_t *retval){
 
       posPointer = pos;
 
-      err = VOP_TRYSEEK(curproc->file_table[fd]->vnode, posPointer);
+      /*err = VOP_TRYSEEK(curproc->file_table[fd]->vnode, posPointer);
       if (err != 0){
         lock_release(curproc->file_table[fd]->lock);
         return ESPIPE; // Fd refers to an object which does not support seeking.
-      }
+      }*/
 
       curproc->file_table[fd]->offset = posPointer;
       *retval = posPointer;
@@ -209,11 +209,11 @@ int sys_lseek(int fd, off_t pos, int whence, off_t *retval){
         return EINVAL; // A negative value of seek position
       }
 
-      err = VOP_TRYSEEK(curproc->file_table[fd]->vnode, posPointer);
+      /*err = VOP_TRYSEEK(curproc->file_table[fd]->vnode, posPointer);
       if (err != 0){
         lock_release(curproc->file_table[fd]->lock);
         return ESPIPE; // Fd refers to an object which does not support seeking.
-      }
+      }*/
 
       curproc->file_table[fd]->offset = posPointer;
       *retval = posPointer;
@@ -229,11 +229,11 @@ int sys_lseek(int fd, off_t pos, int whence, off_t *retval){
       return EINVAL; // A negative value of seek position
     }
 
-    err = VOP_TRYSEEK(curproc->file_table[fd]->vnode, posPointer);
+    /*err = VOP_TRYSEEK(curproc->file_table[fd]->vnode, posPointer);
     if (err != 0){
       lock_release(curproc->file_table[fd]->lock);
       return ESPIPE; // Fd refers to an object which does not support seeking.
-    }
+    }*/
     if (pos < 0) {
       curproc->file_table[fd]->offset = posPointer + pos; //Came back by EOF of abs(pos)
     } else {
