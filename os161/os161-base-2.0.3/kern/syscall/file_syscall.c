@@ -225,7 +225,7 @@ int sys_lseek(int fd, off_t pos, int whence, off_t *retval){
     break;
 
     default:
-      return EINVAL;
+      return EINVAL; // A negative value of seek position
   }
 
   lock_release(curproc->file_table[fd]->lock);
@@ -233,16 +233,66 @@ int sys_lseek(int fd, off_t pos, int whence, off_t *retval){
 
 }
 
-/*
-int sys_dup2(int oldfd, int newfd){
+
+int sys_dup2(int oldfd, int newfd) {
+  //Check if the oldfd and newfd is a valid parameters
+  if (oldfd >= OPEN_MAX || oldfd < 0 || newfd >= OPEN_MAX || newfd < 0){
+    return EBADF; //oldfd is not a valid file handle or new fd is a value that can not be a valid file handle
+  }
+
+  //Check if oldfd is already opened
+  if (curproc->file_table[oldfd] == NULL) {
+    return EBADF; //oldfd is not a valid file handle or new fd is a value that can not be a valid file handle
+  }
+
+  //If the newfd is "free" copy the oldfd into newfd
+  if (curproc->file_table[newfd] == NULL) {
+    curproc->file_table[newfd] = curproc->file_table[oldfd];
+  } else {
+    // if newfd is "open" need to close first
+    sys_close(newfd);
+    curproc->file_table[newfd] = curproc->file_table[oldfd];
+  }
+
   return 0;
 }
 
-int sys_chdir(const char *pathname){
-  return 0;
+
+int sys_chdir(char *pathname){
+
+  char newPathName[BUFF_SIZE];
+
+  int err;
+
+  if (newPathName == NULL) {
+    return EFAULT; // Part or all of the address space pointed to by buf is invalid.
+  }
+  //copyinstr
+  err = vfs_chdir(newPathName); // Set current directory, as a pathname.
+  return err;
+
 }
+
 
 int sys_getcwd(char *buff, size_t buff_len){
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   return 0;
 }
-*/
