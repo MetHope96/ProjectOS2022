@@ -280,7 +280,7 @@ int sys_getcwd(char *buff, size_t buff_len){
   int err;
 
   uio_kinit(&iov, &kuio, buff, buff_len, 0, UIO_READ); //offset = 0
-  kuio.uio_segflg = UIO_USERSPACE; //Set what kind of pointer we have
+  kuio.uio_segflg = UIO_USERSPACE; //Set what kind of pointer we have (userspace or kernelspace)
   kuio.uio_space = curproc->p_addrspace; //Address space for user pointer
 
   if (buff == NULL) {
