@@ -167,8 +167,6 @@ int sys_close(int fd){
 
 int sys_lseek(int fd, off_t pos, int whence, off_t *retval){
 
-  //int err;
-
   struct stat buffer;
 
   off_t currentPointer;
@@ -190,12 +188,6 @@ int sys_lseek(int fd, off_t pos, int whence, off_t *retval){
 
       posPointer = pos;
 
-      /*err = VOP_TRYSEEK(curproc->file_table[fd]->vnode, posPointer);
-      if (err != 0){
-        lock_release(curproc->file_table[fd]->lock);
-        return ESPIPE; // Fd refers to an object which does not support seeking.
-      }*/
-
       curproc->file_table[fd]->offset = posPointer;
       *retval = posPointer;
       break;
@@ -208,12 +200,6 @@ int sys_lseek(int fd, off_t pos, int whence, off_t *retval){
         lock_release(curproc->file_table[fd]->lock);
         return EINVAL; // A negative value of seek position
       }
-
-      /*err = VOP_TRYSEEK(curproc->file_table[fd]->vnode, posPointer);
-      if (err != 0){
-        lock_release(curproc->file_table[fd]->lock);
-        return ESPIPE; // Fd refers to an object which does not support seeking.
-      }*/
 
       curproc->file_table[fd]->offset = posPointer;
       *retval = posPointer;
@@ -229,11 +215,6 @@ int sys_lseek(int fd, off_t pos, int whence, off_t *retval){
       return EINVAL; // A negative value of seek position
     }
 
-    /*err = VOP_TRYSEEK(curproc->file_table[fd]->vnode, posPointer);
-    if (err != 0){
-      lock_release(curproc->file_table[fd]->lock);
-      return ESPIPE; // Fd refers to an object which does not support seeking.
-    }*/
     if (pos < 0) {
       curproc->file_table[fd]->offset = posPointer + pos; //Came back by EOF of abs(pos)
     } else {
