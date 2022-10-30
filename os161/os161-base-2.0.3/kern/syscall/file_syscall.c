@@ -239,21 +239,19 @@ int sys_dup2(int oldfd, int newfd) {
   if (oldfd >= OPEN_MAX || oldfd < 0 || newfd >= OPEN_MAX || newfd < 0){
     return EBADF; //oldfd is not a valid file handle or new fd is a value that can not be a valid file handle
   }
-
+  struct file_handle *fpointer;
+  fpointer = curproc->file_table[oldfd];
   //Check if oldfd is already opened
   if (curproc->file_table[oldfd] == NULL) {
     return EBADF; //oldfd is not a valid file handle or new fd is a value that can not be a valid file handle
   }
 
   //If the newfd is "free" copy the oldfd into newfd
-  if (curproc->file_table[newfd] == NULL) {
-    curproc->file_table[newfd] = curproc->file_table[oldfd];
-  } else {
+  if (curproc->file_table[newfd] != NULL) {
     // if newfd is "open" need to close first
     sys_close(newfd);
-    curproc->file_table[newfd] = curproc->file_table[oldfd];
   }
-
+    curproc->file_table[newfd] = fpointer;
   return 0;
 }
 
