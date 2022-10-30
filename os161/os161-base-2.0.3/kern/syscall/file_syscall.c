@@ -275,24 +275,23 @@ int sys_chdir(char *pathname){
 
 
 int sys_getcwd(char *buff, size_t buff_len){
+  struct iovec iov;
+  struct uio kuio;
+  int err;
 
+  uio_kinit(&iov, &kuio, buff, buff_len, 0, UIO_READ); //offset = 0
+  kuio.uio_segflg = UIO_USERSPACE; //Set what kind of pointer we have
+  kuio.uio_space = curproc->p_addrspace; //Address space for user pointer
 
+  if (buff == NULL) {
+    return EFAULT; // Part or all of the address space pointed to by buf is invalid.
+  }
 
+  err = vfs_getcwd(&kuio); // Get current directory, as a pathname.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  if (err != 0){
+    return err;
+  }
 
   return 0;
 }
