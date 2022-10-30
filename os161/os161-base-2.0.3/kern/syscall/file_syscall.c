@@ -260,15 +260,15 @@ int sys_dup2(int oldfd, int newfd) {
 
 int sys_chdir(char *pathname){
 
-  char newPathName[BUFF_SIZE];
+  //char newPathName[NAME_MAX]; // NAME_MAX = 255
 
   int err;
 
-  if (newPathName == NULL) {
+  if (pathname == NULL) {
     return EFAULT; // Part or all of the address space pointed to by buf is invalid.
   }
   //copyinstr
-  err = vfs_chdir(newPathName); // Set current directory, as a pathname.
+  err = vfs_chdir(pathname); // Set current directory, as a pathname.
   return err;
 
 }
