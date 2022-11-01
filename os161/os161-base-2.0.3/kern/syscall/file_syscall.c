@@ -277,19 +277,21 @@ int sys_getcwd(char *buff, size_t buff_len){
   struct uio kuio;
   int err;
 
-  uio_kinit(&iov, &kuio, buff, buff_len, 0, UIO_READ); //offset = 0
-  kuio.uio_segflg = UIO_USERSPACE; //Set what kind of pointer we have (userspace or kernelspace)
-  kuio.uio_space = curproc->p_addrspace; //Address space for user pointer
-
-  if (buff == NULL) {
+    if (buff == NULL) {
     return EFAULT; // Part or all of the address space pointed to by buf is invalid.
   }
+
+  uio_kinit(&iov, &kuio, buff, buff_len-1, 0, UIO_READ); //offset = 0
+  //kuio.uio_segflg = UIO_USERSPACE; //Set what kind of pointer we have (userspace or kernelspace)
+  //kuio.uio_space = curproc->p_addrspace; //Address space for user pointer
 
   err = vfs_getcwd(&kuio); // Get current directory, as a pathname.
 
   if (err != 0){
     return err;
   }
+
+  buff[sizeof(buff)-1-kuio.uio_resid] = 0;
 
   return 0;
 }
