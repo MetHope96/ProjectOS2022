@@ -106,6 +106,7 @@ void kmain(char *bootstring);
 
 /*test function open*/ 
 int opentest(int, char **);
+int directorytest(int nargs, char **args);
 /*
 int sym_open(char *filename, int flags, int *retval);
 int sym_close(int fd);

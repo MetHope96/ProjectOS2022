@@ -578,6 +578,7 @@ static const char *testmenu[] = {
 	"[fs5] FS long stress                ",
 	"[fs6] FS create stress              ",
 	"[fo1] open syscall              ",
+	"[fo2] directory test              ",
 	NULL
 };
 
@@ -710,7 +711,7 @@ static struct {
 
 	/* file open*/
 	{ "fo1",	opentest },
-	//{ "fo1",	test_open },
+	{ "fo2",	directorytest },
 	
 	{ NULL, NULL }
 };
