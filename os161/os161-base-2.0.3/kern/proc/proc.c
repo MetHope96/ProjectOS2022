@@ -49,6 +49,10 @@
 #include <addrspace.h>
 #include <vnode.h>
 
+#include <kern/fcntl.h>
+#include <vfs.h>
+#include <synch.h>
+
 /*
  * The process for the kernel; this holds all the kernel-only threads.
  */
@@ -182,7 +186,7 @@ proc_destroy(struct proc *proc)
             lock_destroy(proc->file_table[i]->lock);
             vfs_close(proc->file_table[i]->vnode);
             kfree(proc->file_table[i]);
-			curproc->file_table[fd] = NULL;
+			curproc->file_table[i] = NULL;
 		}
     }
 
@@ -240,7 +244,7 @@ proc_create_runprogram(const char *name)
 	if (err) {
 		kfree(con0);
 		kfree(newproc->file_table[0]);
-		return err;
+		return NULL;
 	}
 	kfree(con0);
 	newproc->file_table[0]->offset = 0;
@@ -257,17 +261,26 @@ proc_create_runprogram(const char *name)
     char *con1 = kstrdup("con:");
     if (con1 == NULL) {
         kfree(con1);
+		lock_destroy(newproc->file_table[0]->lock);
+		vfs_close(newproc->file_table[0]->vnode);
+        kfree(newproc->file_table[0]);
 		return NULL;
     }
 
     newproc->file_table[1] = (struct file_handle *)kmalloc(sizeof(struct file_handle));
         if (newproc->file_table[1] == NULL) {
 			kfree(con1);
+			lock_destroy(newproc->file_table[0]->lock);
+		    vfs_close(newproc->file_table[0]->vnode);
+            kfree(newproc->file_table[0]);
         	return NULL;
         }
         err = vfs_open(con1, O_WRONLY, 0, &newproc->file_table[1]->vnode);
         if (err) {
                 kfree(con1);
+				lock_destroy(newproc->file_table[0]->lock);
+				vfs_close(newproc->file_table[0]->vnode);
+                kfree(newproc->file_table[0]);
                 kfree(newproc->file_table[1]);
                 return NULL;
         }
@@ -276,6 +289,9 @@ proc_create_runprogram(const char *name)
     newproc->file_table[1]->lock = lock_create("lock_STDOUT");
         
 	if (newproc->file_table[1]->lock == NULL) {
+		lock_destroy(newproc->file_table[0]->lock);
+		vfs_close(newproc->file_table[0]->vnode);
+        kfree(newproc->file_table[0]);
         vfs_close(newproc->file_table[1]->vnode);
         kfree(newproc->file_table[1]);
     }
@@ -286,18 +302,36 @@ proc_create_runprogram(const char *name)
     char *con2 = kstrdup("con:");
     if (con2 == NULL) {
         kfree(con2);
+		lock_destroy(newproc->file_table[0]->lock);
+		vfs_close(newproc->file_table[0]->vnode);
+        kfree(newproc->file_table[0]);
+		lock_destroy(newproc->file_table[1]->lock);
+		vfs_close(newproc->file_table[1]->vnode);
+        kfree(newproc->file_table[1]);
 		return NULL;
     }
 
     newproc->file_table[2] = (struct file_handle *)kmalloc(sizeof(struct file_handle));
     if (newproc->file_table[2] == NULL) {
         kfree(con2);
+		lock_destroy(newproc->file_table[0]->lock);
+		vfs_close(newproc->file_table[0]->vnode);
+        kfree(newproc->file_table[0]);
+		lock_destroy(newproc->file_table[1]->lock);
+		vfs_close(newproc->file_table[1]->vnode);
+        kfree(newproc->file_table[1]);
 		return NULL;
         }
 
     err = vfs_open(con2, O_RDONLY, 0, &newproc->file_table[2]->vnode);
     if (err) {
         kfree(con2);
+		lock_destroy(newproc->file_table[0]->lock);
+		vfs_close(newproc->file_table[0]->vnode);
+        kfree(newproc->file_table[0]);
+		lock_destroy(newproc->file_table[1]->lock);
+		vfs_close(newproc->file_table[1]->vnode);
+        kfree(newproc->file_table[1]);
 		kfree(newproc->file_table[2]);
                 return NULL;
         }
@@ -305,10 +339,16 @@ proc_create_runprogram(const char *name)
 	newproc->file_table[2]->offset = 0;
     newproc->file_table[2]->lock = lock_create("lock_STDERR");
     if (newproc->file_table[2]->lock == NULL) {
-        vfs_close(newproc->file_table[2]->vnode);
+        lock_destroy(newproc->file_table[0]->lock);
+		vfs_close(newproc->file_table[0]->vnode);
+        kfree(newproc->file_table[0]);
+		lock_destroy(newproc->file_table[1]->lock);
+		vfs_close(newproc->file_table[1]->vnode);
+        kfree(newproc->file_table[1]);
+		vfs_close(newproc->file_table[2]->vnode);
 		kfree(newproc->file_table[2]);
     }
-	newproc->file_table[2]->mode_open = O_RDONLY;
+	newproc->file_table[2]->flags = O_RDONLY;
 	/* Console Initialization Done */
 	
 			
