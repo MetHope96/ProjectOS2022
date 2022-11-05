@@ -74,7 +74,12 @@ struct proc {
 
 	/* add more material here as needed */
 	struct file_handle *file_table[OPEN_MAX];
+	pid_t proc_id; //pid
+	pid_t parent_id;//ppid
+	bool exit_status;
+	int exit_code;
 };
+
 
 
 

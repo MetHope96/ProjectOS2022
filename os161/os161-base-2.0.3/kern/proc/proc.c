@@ -57,7 +57,8 @@
  * The process for the kernel; this holds all the kernel-only threads.
  */
 struct proc *kproc;
-
+int proc_counter;
+struct proc *proc_table[PID_MAX];
 /*
  * Create a proc structure.
  */
@@ -287,7 +288,7 @@ proc_create_runprogram(const char *name)
 	kfree(con1);
 	newproc->file_table[1]->offset = 0;
     newproc->file_table[1]->lock = lock_create("lock_STDOUT");
-        
+
 	if (newproc->file_table[1]->lock == NULL) {
 		lock_destroy(newproc->file_table[0]->lock);
 		vfs_close(newproc->file_table[0]->vnode);
@@ -350,8 +351,16 @@ proc_create_runprogram(const char *name)
     }
 	newproc->file_table[2]->flags = O_RDONLY;
 	/* Console Initialization Done */
-	
-			
+
+	/* Set the minPID = 2 and parent PID = 0*/
+	newproc->proc_id = 2;
+	newproc->parent_id = 1;
+	/*Inizalization of proc_table */
+	for (int i=0; i<PID_MAX;i++){
+		proc_table[i] = NULL;
+	}
+	proc_table[0] = newproc;
+	proc_counter = 2;
 	/*
 	 * Lock the current process to copy its current directory.
 	 * (We don't need to lock the new process, though, as we have
