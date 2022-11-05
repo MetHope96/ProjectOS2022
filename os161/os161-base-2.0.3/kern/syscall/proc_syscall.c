@@ -78,7 +78,7 @@ int sys_fork(pid_t *child_pid, struct trapframe *tf){
   /* Copy the trapframe into trapframe_child */
   *tf_child = *tf;
 
-  err = thread_fork(curthread->t_name, child_proc,enter_forked_process,(void *)tf_child, (unsigned long)0);
+  err = thread_fork(curthread->t_name, child_proc,enter_forked_process,(struct trapframe *)tf_child, (unsigned long)0);
   /*If thread_fork fails: destroy the process and free the trapframe memory*/
   if(err){
     proc_destroy(child_proc);
