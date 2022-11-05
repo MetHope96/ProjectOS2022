@@ -30,6 +30,7 @@
 #ifndef _PROC_H_
 #define _PROC_H_
 
+
 /*
  * Definition of a process.
  *
@@ -39,6 +40,8 @@
 #include <spinlock.h>
 #include <file_syscall.h>
 #include <limits.h>
+
+#define MAX_PROC 500
 
 struct addrspace;
 struct thread;

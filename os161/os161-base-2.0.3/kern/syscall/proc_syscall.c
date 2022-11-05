@@ -14,6 +14,7 @@
 #include <vnode.h>
 #include <vm.h>
 
+
 int sys_getpid(pid_t *curproc_pid) {
 	*curproc_pid = curproc->proc_id;
 	return 0;
@@ -48,7 +49,7 @@ int sys_fork(pid_t *child_pid, struct trapframe *tf){
   proc_table[j] = child_proc;
 
   /*Copy the address space of the parent in a child process */
-  err = as_copy(curproc->p_addrspace, &childproc->p_addrspace);
+  err = as_copy(curproc->p_addrspace, &child_proc->p_addrspace);
 
   if(err){
     return err;
@@ -60,7 +61,7 @@ int sys_fork(pid_t *child_pid, struct trapframe *tf){
 
   /*Since the parent and child have the same file table: */
 
-  for(int i = 0; i < OPEN_MAX, i++){
+  for(int i = 0; i < OPEN_MAX; i++){
     if(curproc->file_table[i] != NULL){
       lock_acquire(curproc->file_table[i]->lock);//Lock the filetablei[i]
       child_proc->file_table[i] = curproc->file_table[i];
@@ -77,7 +78,7 @@ int sys_fork(pid_t *child_pid, struct trapframe *tf){
   /* Copy the trapframe into trapframe_child */
   *tf_child = *tf;
 
-  err = thread_fork(curthread->t_name, child_proc,enter_forked_process,(struct trapframe*)tf_child, (unsigned long)0);
+  err = thread_fork(curthread->t_name, child_proc,enter_forked_process,(void *)tf_child, (unsigned long)0);
   /*If thread_fork fails: destroy the process and free the trapframe memory*/
   if(err){
     proc_destroy(child_proc);

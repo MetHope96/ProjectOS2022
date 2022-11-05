@@ -53,7 +53,7 @@
 #include <vfs.h>
 #include <synch.h>
 
-#define MAX_PROC 500
+
 /*
  * The process for the kernel; this holds all the kernel-only threads.
  */
