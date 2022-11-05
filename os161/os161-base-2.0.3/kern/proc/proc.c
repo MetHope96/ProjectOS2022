@@ -92,6 +92,12 @@ proc_create(const char *name)
 		proc->file_table[i] = NULL;
 	}
 
+	/*Defined the initial value */
+	proc->proc_id = -1;
+	proc->parent_id = -1;
+	proc->exit_status = false;
+	proc->exit_code = -1;
+	
 	return proc;
 }
 
@@ -372,7 +378,6 @@ proc_create_runprogram(const char *name)
 		newproc->p_cwd = curproc->p_cwd;
 	}
 	spinlock_release(&curproc->p_lock);
-
 	return newproc;
 }
 
