@@ -14,5 +14,8 @@ extern struct proc *proc_table[PID_MAX];
 extern int proc_counter;
 
 int sys_getpid(pid_t *curproc_pid);
-
+int sys_fork(pid_t *child_pid, struct trapframe *tf);
+//int sys_waitpid();
+//void sys_exit();
+//int sys_execv();
 #endif

@@ -53,12 +53,13 @@
 #include <vfs.h>
 #include <synch.h>
 
+#define MAX_PROC 500
 /*
  * The process for the kernel; this holds all the kernel-only threads.
  */
 struct proc *kproc;
-int proc_counter;
-struct proc *proc_table[PID_MAX];
+int proc_counter=1;
+struct proc *proc_table[MAX_PROC];
 /*
  * Create a proc structure.
  */
@@ -93,11 +94,11 @@ proc_create(const char *name)
 	}
 
 	/*Defined the initial value */
-	proc->proc_id = -1;
-	proc->parent_id = -1;
+	proc->proc_id = 1;
+	proc->parent_id = 0;
 	proc->exit_status = false;
 	proc->exit_code = -1;
-	
+
 	return proc;
 }
 
@@ -359,14 +360,14 @@ proc_create_runprogram(const char *name)
 	/* Console Initialization Done */
 
 	/* Set the minPID = 2 and parent PID = 0*/
-	newproc->proc_id = 2;
-	newproc->parent_id = 1;
+	//newproc->proc_id = 2;
+	//newproc->parent_id = 1;
 	/*Inizalization of proc_table */
 	for (int i=0; i<PID_MAX;i++){
 		proc_table[i] = NULL;
 	}
-	proc_table[0] = newproc;
-	proc_counter = 2;
+	//proc_table[0] = newproc;
+	//proc_counter = 2;
 	/*
 	 * Lock the current process to copy its current directory.
 	 * (We don't need to lock the new process, though, as we have
