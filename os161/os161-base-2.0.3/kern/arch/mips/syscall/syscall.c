@@ -155,11 +155,12 @@ syscall(struct trapframe *tf)
  * Thus, you can trash it and do things another way if you prefer.
  */
 void
-enter_forked_process(struct trapframe *tf)
+enter_forked_process(void *tf, unsigned long num)
 {
+	(void)num;
 	as_activate();
-	struct trapframe tf_child = *tf;
-	kfree(tf);
+	struct trapframe tf_child = *(struct trapframe *)tf;
+	kfree((struct trapframe *)tf);
 	tf_child.tf_v0 = 0;
 	tf_child.tf_a3 = 0;
 	tf_child.tf_epc += 4;
