@@ -35,6 +35,8 @@
 #include <thread.h>
 #include <current.h>
 #include <syscall.h>
+#include <copyinout.h>
+#include <addrspace.h>
 
 
 /*
@@ -155,14 +157,13 @@ syscall(struct trapframe *tf)
  * Thus, you can trash it and do things another way if you prefer.
  */
 void
-enter_forked_process(void *tf, unsigned long num)
+enter_forked_process(struct trapframe *tf)
 {
-	(void)num;
-	as_activate();
-	struct trapframe tf_child = *(struct trapframe *)tf;
-	kfree((struct trapframe *)tf);
+	struct trapframe tf_child = *tf;
+	kfree(tf);
 	tf_child.tf_v0 = 0;
 	tf_child.tf_a3 = 0;
 	tf_child.tf_epc += 4;
+	as_activate();
 	mips_usermode(&tf_child);
 }

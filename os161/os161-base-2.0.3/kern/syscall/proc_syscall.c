@@ -13,11 +13,18 @@
 #include <kern/fcntl.h>
 #include <vnode.h>
 #include <vm.h>
+#include <lib.h>
 
 
 int sys_getpid(pid_t *curproc_pid) {
 	*curproc_pid = curproc->proc_id;
 	return 0;
+}
+
+static void op_efp(void *tfv, unsigned long data2){
+  (void) data2;
+  struct trapframe *tf = (struct trapframe *)tfv;
+  enter_forked_process(tf);
 }
 
 int sys_fork(pid_t *child_pid, struct trapframe *tf){
@@ -76,9 +83,10 @@ int sys_fork(pid_t *child_pid, struct trapframe *tf){
   }
 
   /* Copy the trapframe into trapframe_child */
-  *tf_child = *tf;
+  //*tf_child = *tf;
+  memcpy(tf_child, tf, sizepf(struct trapframe));
 
-  err = thread_fork(curthread->t_name, child_proc,enter_forked_process,(struct trapframe *)tf_child, (unsigned long)0);
+  err = thread_fork(curthread->t_name, child_proc,op_efp,(void *)tf_child, (unsigned long)0);
   /*If thread_fork fails: destroy the process and free the trapframe memory*/
   if(err){
     proc_destroy(child_proc);
