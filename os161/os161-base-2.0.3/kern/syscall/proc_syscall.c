@@ -84,7 +84,7 @@ int sys_fork(pid_t *child_pid, struct trapframe *tf){
 
   /* Copy the trapframe into trapframe_child */
   //*tf_child = *tf;
-  memcpy(tf_child, tf, sizepf(struct trapframe));
+  memcpy(tf_child, tf, sizeof(struct trapframe));
 
   err = thread_fork(curthread->t_name, child_proc,op_efp,(void *)tf_child, (unsigned long)0);
   /*If thread_fork fails: destroy the process and free the trapframe memory*/
