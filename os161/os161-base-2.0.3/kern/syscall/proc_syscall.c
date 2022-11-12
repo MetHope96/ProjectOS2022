@@ -98,3 +98,39 @@ int sys_fork(pid_t *child_pid, struct trapframe *tf){
   *child_pid = child_proc->proc_id;
   return 0;
 }
+
+void sys_exit(int exitcode){
+	int i = 0;
+	/*
+	if(proc_table[0]->proc_id == curproc->proc_id){
+		kprintf("Called exit for Proc %d which is at 0 : %s \n", curproc->proc_id, curproc->p_name);
+		//thread_exit();
+		return;
+	}
+	*/
+	for(i = 0; i < MAX_PROC; i++){
+		if(proc_table[i] != NULL){
+			if(proc_table[i]->proc_id == curproc->proc_id)
+			break;
+		}
+		if(i == MAX_PROC - 1)
+		panic("Current process not found in process table");
+	}
+/*
+	while(proc_table[i]->proc_id != curproc->proc_id){
+                if(i == OPEN_MAX - 1){
+                        panic("Current process not found in process table");
+                }
+                i++;
+        }
+*/
+	//kprintf("Called exit for PID %d in proc table at %d : %s \n", proc_table[i]->proc_id, i, curproc->p_name);
+	lock_acquire(curproc->lock);
+	curproc->exit_status = true;
+	curproc->exit_code = _MKWAIT_EXIT(exitcode);
+	KASSERT(curproc->exit_status == proc_table[i]->exit_status);
+	KASSERT(curproc->exit_code == proc_table[i]->exit_code);
+	//cv_signal(curproc->cv, curproc->lock);
+	lock_release(curproc->lock);
+	thread_exit();
+}

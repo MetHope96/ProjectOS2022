@@ -81,6 +81,7 @@ struct proc {
 	pid_t parent_id;//ppid
 	bool exit_status;
 	int exit_code;
+	struct lock *lock;
 };
 
 

@@ -16,6 +16,6 @@ extern int proc_counter;
 int sys_getpid(pid_t *curproc_pid);
 int sys_fork(pid_t *child_pid, struct trapframe *tf);
 //int sys_waitpid();
-//void sys_exit();
+void sys_exit(int exitcode);
 //int sys_execv();
 #endif
