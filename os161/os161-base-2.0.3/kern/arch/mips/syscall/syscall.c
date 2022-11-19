@@ -148,12 +148,24 @@ syscall(struct trapframe *tf)
 		break;
 		}
 	    
+		case SYS_chdir:
+		err = sys_chdir((char*)tf->tf_a0);
+		break;
+	
+	    case SYS___getcwd:
+		err = sys_getcwd((char *)tf->tf_a0, (size_t)tf->tf_a1);
+		break;
+
 	    case SYS_dup2:
 		err = sys_dup2((int)tf->tf_a0, (int)tf->tf_a1);
 		break;
 
 		case SYS_fork:
 		err = sys_fork((pid_t *)&retval, tf);
+		break;
+
+		case SYS_getpid:
+		err = sys_getpid((pid_t *)&retval);
 		break;
 
 		case SYS__exit:
