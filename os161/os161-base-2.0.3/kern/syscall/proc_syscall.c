@@ -76,6 +76,13 @@ int sys_fork(pid_t *child_pid, struct trapframe *tf){
     }
   }
 
+  spinlock_acquire(&curproc->p_lock);
+      if (curproc->p_cwd != NULL) {
+            VOP_INCREF(curproc->p_cwd);
+            childproc->p_cwd = curproc->p_cwd;
+      }
+  spinlock_release(&curproc->p_lock);
+
   /*Creation of memory space of trapframe */
   tf_child = (struct trapframe *)kmalloc(sizeof(struct trapframe));
   if(tf_child == NULL){
