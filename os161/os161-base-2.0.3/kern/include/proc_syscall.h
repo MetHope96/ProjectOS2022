@@ -10,7 +10,7 @@
 
 /*Define the extern struct defined in an other file (proc.h) */
 
-extern struct proc *proc_table[PID_MAX];
+extern struct proc *proc_table[MAX_PROC];
 extern int proc_counter;
 
 int sys_getpid(pid_t *curproc_pid);
