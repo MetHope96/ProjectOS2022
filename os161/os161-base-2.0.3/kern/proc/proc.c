@@ -210,6 +210,7 @@ proc_bootstrap(void)
 	if (kproc == NULL) {
 		panic("proc_create for kproc failed\n");
 	}
+	 proc_table[0] = kproc;
 }
 
 /*
