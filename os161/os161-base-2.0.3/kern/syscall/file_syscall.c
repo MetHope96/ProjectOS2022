@@ -273,7 +273,7 @@ int sys_chdir(char *pathname){
     return EFAULT; // Part or all of the address space pointed to by buf is invalid.
   }
   //copyinstr
-  if ((err =  copyinstr(pathname, newPathName, NAME_MAX, &actual) != 0)){
+  if ((err =  copyinstr((const_userptr_t)pathname, newPathName, NAME_MAX, &actual) != 0)){
 		return err;
 	}
 
