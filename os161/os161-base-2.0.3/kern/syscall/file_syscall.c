@@ -15,9 +15,17 @@
 #include <stat.h>
 #include <copyinout.h>
 #include <kern/seek.h>
-int sys_open(char *filename, int flags, int *retfd){
+int sys_open(const char *filename, int flags, int *retfd){
   bool append = false; // This is 0 if is not open in append mode
   int err = 0;
+  size_t len = PATH_MAX;
+  size_t actual;
+
+  char file_name[PATH_MAX];
+  int copyinside = copyinstr((const_userptr_t)filename, file_name, len, &actual);
+  if(copyinside){
+    return copyinside;
+  }
 
   switch(flags){ // Check if there are a valid flags
     case O_RDONLY:
@@ -53,7 +61,7 @@ int sys_open(char *filename, int flags, int *retfd){
     }
 
     curproc->file_table[i] = (struct file_handle *)kmalloc(sizeof(struct file_handle));
-    err = vfs_open(filename, flags, 0, &curproc->file_table[i]->vnode);
+    err = vfs_open(file_name, flags, 0, &curproc->file_table[i]->vnode);
 
     if (err){
       kfree(curproc->file_table[i]);
@@ -121,26 +129,25 @@ int sys_write(int fd, userptr_t buff, size_t buff_len, int *retval){
     return EBADF; //Fd is not a valid file descriptor
   }
 
-  /*
-  char *buffer = (char *)kmalloc(sizeof(*buff)*buff_len);
+  
+  char *buffer = (char *)kmalloc(sizeof(*buff)*buff_len);//buff user, buffer kernel
   err = copyin((const_userptr_t)buff, buffer, buff_len);
   if(err) {
     kfree(buffer);
     return err;
   }
-  */
+
 
   struct iovec iov;
   struct uio kuio;
 
-  //void *buffer = (void *)buff;
   lock_acquire(curproc->file_table[fd]->lock);
-  //uio_kinit(&iov, &kuio, buffer, buff_len, curproc->file_table[fd]->offset, UIO_WRITE);
-  uio_kinit(&iov, &kuio, buff, buff_len, curproc->file_table[fd]->offset, UIO_WRITE);
+  uio_kinit(&iov, &kuio, buffer, buff_len, curproc->file_table[fd]->offset, UIO_WRITE);
+  //uio_kinit(&iov, &kuio, buff, buff_len, curproc->file_table[fd]->offset, UIO_WRITE);
 
   err = VOP_WRITE (curproc->file_table[fd]->vnode, &kuio);
   if (err){
-    //kfree(buffer);
+    kfree(buffer);
     return err;
   }
 
@@ -148,7 +155,7 @@ int sys_write(int fd, userptr_t buff, size_t buff_len, int *retval){
 
   curproc->file_table[fd]->offset = kuio.uio_offset;
   lock_release(curproc->file_table[fd]->lock);
-  //kfree(buffer);
+  kfree(buffer);
   return 0;
 }
 
@@ -258,14 +265,18 @@ int sys_dup2(int oldfd, int newfd) {
 
 int sys_chdir(char *pathname){
 
-  //char newPathName[NAME_MAX]; // NAME_MAX = 255
-
+  char newPathName[NAME_MAX]; // NAME_MAX = 255
+  size_t actual;
   int err;
 
   if (pathname == NULL) {
     return EFAULT; // Part or all of the address space pointed to by buf is invalid.
   }
   //copyinstr
+  if ((err =  copyinstr(pathname, newPathName, NAME_MAX, &actual) != 0)){
+		return err;
+	}
+
   err = vfs_chdir(pathname); // Set current directory, as a pathname.
   return err;
 
