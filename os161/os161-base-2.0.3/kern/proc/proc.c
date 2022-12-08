@@ -210,7 +210,6 @@ proc_bootstrap(void)
 	if (kproc == NULL) {
 		panic("proc_create for kproc failed\n");
 	}
-	 proc_table[0] = kproc;
 }
 
 /*
@@ -242,6 +241,7 @@ proc_create_runprogram(const char *name)
 	for (int i=0; i<MAX_PROC;i++){
 		proc_table[i] = NULL;
 	}
+
 	//proc_table[0] = newproc;
 	//proc_counter = 2;
 	/*
