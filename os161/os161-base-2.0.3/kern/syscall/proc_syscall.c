@@ -44,16 +44,15 @@ int sys_fork(pid_t *child_pid, struct trapframe *tf){
     return ENOMEM; //Sufficient virtual memory for the new process was not available.
   }
 
-  int j=0;
+
 
   /* Search the first free space in proc_table */
-  while(proc_table[j] != NULL){
-    if(j == MAX_PROC -1){
+
+    if(proc_counter == MAX_PROC -1){
       return ENPROC; //There are already too many process on the system
     }
-    j++;
-  }
-  proc_table[j] = child_proc;
+
+  proc_table[proc_counter] = child_proc;
 
   /*Copy the address space of the parent in a child process */
   err = as_copy(curproc->p_addrspace, &child_proc->p_addrspace);
