@@ -15,6 +15,7 @@
 #include <vm.h>
 #include <lib.h>
 
-void sys_exit(){
+void sys_exit(int exitcode){
+    curproc->exit_code = _MKWAIT_EXIT(exitcode);
 	thread_exit();
 }

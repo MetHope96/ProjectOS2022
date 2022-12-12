@@ -7,6 +7,6 @@
 #include <limits.h>
 #include <mips/trapframe.h>
 
-void sys_exit();
+void sys_exit(int exitcode);
 
 #endif
