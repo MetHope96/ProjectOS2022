@@ -36,7 +36,8 @@ int sys_write(int fd, userptr_t buff, size_t buff_len, int *retval){
 
   lock_acquire(curproc->file_table[fd]->lock);
 
-    uio_kinit(&iov, &kuio, buff, buff_len, curproc->file_table[fd]->offset, UIO_WRITE);
+//  uio_kinit(&iov, &kuio, buffer, buff_len, curproc->file_table[fd]->offset, UIO_WRITE);
+    uio_uinit(&iov, &kuio, buff, buff_len, curproc->file_table[fd]->offset, UIO_WRITE);
     kuio.uio_space = curproc->p_addrspace;
 	kuio.uio_segflg = UIO_USERSPACE; // for user space address
 
