@@ -73,8 +73,6 @@ struct proc {
 	/* add more material here as needed */
 };
 
-
-
 /* This is the process structure for the kernel and for kernel-only threads. */
 extern struct proc *kproc;
 

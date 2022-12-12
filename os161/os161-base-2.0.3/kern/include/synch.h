@@ -74,9 +74,6 @@ void V(struct semaphore *);
  */
 struct lock {
         char *lk_name;
-        struct wchan *lk_wchan; //waiting channel definition 
-        struct spinlock lk_spinlock; // spinlock definition
-        struct thread *lk_thread; //thread holds lock
         HANGMAN_LOCKABLE(lk_hangman);   /* Deadlock detector hook. */
         // add what you need here
         // (don't forget to mark things volatile as needed)
