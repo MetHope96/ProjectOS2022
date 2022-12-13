@@ -74,6 +74,7 @@ struct proc {
 
 	/* add more material here as needed */
 	struct file_handle *file_table[OPEN_MAX];
+	int exit_code;
 };
 
 /* This is the process structure for the kernel and for kernel-only threads. */

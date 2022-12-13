@@ -117,7 +117,7 @@ syscall(struct trapframe *tf)
 		break;
 
 		case SYS__exit:
-		sys_exit(void);
+		sys_exit((int)tf->tf_a0);
 		err = 0;
 		break;
 
