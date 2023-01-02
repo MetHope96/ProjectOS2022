@@ -69,6 +69,7 @@ proc_create(const char *name)
 {
 	struct proc *proc;
 	pid_t index_proc_table;
+	int proc_counter;
 	proc = kmalloc(sizeof(*proc));
 	if (proc == NULL) {
 		return NULL;
