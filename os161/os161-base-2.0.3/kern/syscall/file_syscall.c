@@ -3,6 +3,7 @@
 #include <kern/fcntl.h>
 #include <proc.h>
 #include <current.h>
+#include <vm.h>
 #include <kern/unistd.h>
 #include <endian.h>
 #include <vnode.h>
@@ -15,6 +16,12 @@
 #include <stat.h>
 #include <copyinout.h>
 #include <kern/seek.h>
+#include <mips/trapframe.h>
+#include <thread.h>
+#include <kern/iovec.h>
+#include <addrspace.h>
+#include <kern/wait.h>
+
 int sys_open(const char *filename, int flags, int *retfd){
   bool append = false; // This is 0 if is not open in append mode
   int err = 0;
@@ -22,6 +29,13 @@ int sys_open(const char *filename, int flags, int *retfd){
   size_t actual;
 
   char file_name[PATH_MAX];
+
+  //Check if filename is invalid pointer
+  if(filename == NULL){
+    err = EFAULT;
+    return err;
+  }
+
   int copyinside = copyinstr((const_userptr_t)filename, file_name, len, &actual);
   if(copyinside){
     return copyinside;
@@ -61,7 +75,7 @@ int sys_open(const char *filename, int flags, int *retfd){
     }
 
     curproc->file_table[i] = (struct file_handle *)kmalloc(sizeof(struct file_handle));
-    err = vfs_open(file_name, flags, 0, &curproc->file_table[i]->vnode);
+    err = vfs_open(file_name, flags, 0664, &curproc->file_table[i]->vnode);
 
     if (err){
       kfree(curproc->file_table[i]);
@@ -129,7 +143,7 @@ int sys_write(int fd, userptr_t buff, size_t buff_len, int *retval){
     return EBADF; //Fd is not a valid file descriptor
   }
 
-  
+
   char *buffer = (char *)kmalloc(sizeof(*buff)*buff_len);//buff user, buffer kernel
   err = copyin((const_userptr_t)buff, buffer, buff_len);
   if(err) {

@@ -117,7 +117,7 @@ syscall(struct trapframe *tf)
 		case SYS_open:
 		err = sys_open((const char *)tf->tf_a0, (int)tf->tf_a1, &retval);
 		break;
-		
+
 	    case SYS_read:
 		err = sys_read((int)tf->tf_a0, (userptr_t)tf->tf_a1, (size_t)tf->tf_a2, &retval);
 		break;
@@ -134,24 +134,24 @@ syscall(struct trapframe *tf)
 		off_t retVal64 = 0;
 		off_t offset = ((off_t)tf->tf_a2 << 32) | tf->tf_a3;
 		int whence;
- 
+
 		err = copyin((userptr_t)(tf->tf_sp+16),&whence, sizeof(whence)); // get whence from stack pointer address sp+16
-		
+
 		if (!err) {
 			err = sys_lseek(tf->tf_a0, offset, whence, &retVal64);
-			
+
 			if (!err) {
 				retval = retVal64 >> 32;
 				tf->tf_v1 = retVal64;
-			}	
+			}
 		}
 		break;
 		}
-	    
+
 		case SYS_chdir:
 		err = sys_chdir((char*)tf->tf_a0);
 		break;
-	
+
 	    case SYS___getcwd:
 		err = sys_getcwd((char *)tf->tf_a0, (size_t)tf->tf_a1);
 		break;
@@ -173,6 +173,13 @@ syscall(struct trapframe *tf)
 		err = 0;
 		break;
 
+
+		case SYS_waitpid:
+		err = sys_waitpid((pid_t)tf->tf_a0, (int *)tf->tf_a1, (int)tf->tf_a2, &retval );
+		break;
+
+		case SYS_execv:
+		err = SYS__execv((char *)tf->tf_a0, (char **)tf->tf_a1);
 	    default:
 		kprintf("Unknown syscall %d\n", callno);
 		err = ENOSYS;
@@ -220,10 +227,12 @@ void
 enter_forked_process(struct trapframe *tf)
 {
 	struct trapframe tf_child = *tf;
-	kfree(tf);
+	
+	as_activate();
+	//kfree(tf);
 	tf_child.tf_v0 = 0;
 	tf_child.tf_a3 = 0;
 	tf_child.tf_epc += 4;
-	as_activate();
+
 	mips_usermode(&tf_child);
 }

@@ -52,13 +52,13 @@
 #include <kern/fcntl.h>
 #include <vfs.h>
 #include <synch.h>
-
+#include <kern/unistd.h>
+#include <limits.h>
 
 /*
  * The process for the kernel; this holds all the kernel-only threads.
  */
 struct proc *kproc;
-int proc_counter=1;
 struct proc *proc_table[MAX_PROC];
 /*
  * Create a proc structure.
@@ -68,7 +68,7 @@ struct proc *
 proc_create(const char *name)
 {
 	struct proc *proc;
-
+	pid_t index_proc_table;
 	proc = kmalloc(sizeof(*proc));
 	if (proc == NULL) {
 		return NULL;
@@ -94,8 +94,26 @@ proc_create(const char *name)
 	}
 
 	/*Defined the initial value */
-	proc->proc_id = 1;
-	proc->parent_id = 0;
+	if(strcmp(name,"[kernel]") == 0){
+		proc->proc_id = 1;
+		proc->parent_id = 0;
+		proc_counter = 1;
+		proc_table[0] = proc;
+		//Inizialize the proc table
+		for(int i=1;i<MAX_PROC;i++){
+			proc_table[i] = NULL;
+		}
+	} else {
+		while(proc_table[index_proc_table] != NULL){
+			index_proc_table++;
+		}
+		proc->proc_id = index_proc_table;
+		if(index_proc_table == 1){
+			proc->parent_id = 1;
+		}
+		proc_table[index_proc_table] = proc;
+		proc_counter++;
+	}
 	proc->exit_status = false;
 	proc->exit_code = -1;
 
@@ -210,7 +228,6 @@ proc_bootstrap(void)
 	if (kproc == NULL) {
 		panic("proc_create for kproc failed\n");
 	}
-	proc_table[0] = kproc;
 }
 
 /*

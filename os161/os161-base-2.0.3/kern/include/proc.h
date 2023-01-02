@@ -82,10 +82,13 @@ struct proc {
 	bool exit_status;
 	int exit_code;
 	struct lock *lock;
+	char p_cwdpath[PATH_MAX+1];
 };
 
 
 
+/* Create a proc structure. */
+struct proc *proc_create(const char *name);
 
 /* This is the process structure for the kernel and for kernel-only threads. */
 extern struct proc *kproc;

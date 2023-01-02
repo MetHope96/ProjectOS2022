@@ -117,6 +117,7 @@ kill_curthread(vaddr_t epc, unsigned code, vaddr_t vaddr)
 	panic("I don't know how to handle this\n");
 }
 
+sys__exit(sig);
 /*
  * General trap (exception) handling function for mips.
  * This is called by the assembly-language exception handler once

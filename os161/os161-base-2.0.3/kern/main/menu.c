@@ -116,6 +116,7 @@ common_prog(int nargs, char **args)
 {
 	struct proc *proc;
 	int result;
+	int status;
 
 	/* Create a process for the new program to run in. */
 	proc = proc_create_runprogram(args[0] /* name */);
@@ -133,6 +134,7 @@ common_prog(int nargs, char **args)
 		return result;
 	}
 
+	sys_waitpid(1,&status,0,&result);
 	/*
 	 * The new process will be destroyed when the program exits...
 	 * once you write the code for handling that.
@@ -712,7 +714,7 @@ static struct {
 	/* file open*/
 	{ "fo1",	opentest },
 	{ "fo2",	directorytest },
-	
+
 	{ NULL, NULL }
 };
 
