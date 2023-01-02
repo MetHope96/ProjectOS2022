@@ -60,6 +60,7 @@
  */
 struct proc *kproc;
 struct proc *proc_table[MAX_PROC];
+int proc_counter;
 /*
  * Create a proc structure.
  */
@@ -69,7 +70,7 @@ proc_create(const char *name)
 {
 	struct proc *proc;
 	pid_t index_proc_table = 0;
-	int proc_counter;
+
 	proc = kmalloc(sizeof(*proc));
 	if (proc == NULL) {
 		return NULL;
