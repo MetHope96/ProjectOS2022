@@ -39,7 +39,7 @@
 #include <vm.h>
 #include <mainbus.h>
 #include <syscall.h>
-
+#include <file_syscall.h>
 
 /* in exception-*.S */
 extern __DEAD void asm_usermode(struct trapframe *tf);
