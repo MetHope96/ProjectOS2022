@@ -49,11 +49,18 @@
 #include <addrspace.h>
 #include <vnode.h>
 
+#include <kern/fcntl.h>
+#include <vfs.h>
+#include <synch.h>
+#include <kern/unistd.h>
+#include <limits.h>
+
 /*
  * The process for the kernel; this holds all the kernel-only threads.
  */
 struct proc *kproc;
-
+struct proc *proc_table[MAX_PROC];
+int proc_counter;
 /*
  * Create a proc structure.
  */
@@ -62,6 +69,7 @@ struct proc *
 proc_create(const char *name)
 {
 	struct proc *proc;
+	pid_t index_proc_table = 0;
 
 	proc = kmalloc(sizeof(*proc));
 	if (proc == NULL) {
@@ -81,6 +89,35 @@ proc_create(const char *name)
 
 	/* VFS fields */
 	proc->p_cwd = NULL;
+
+	/* Initialization of the file table*/
+	for (int i = 0; i < OPEN_MAX; i++){
+		proc->file_table[i] = NULL;
+	}
+
+	/*Defined the initial value */
+	if(strcmp(name,"[kernel]") == 0){
+		proc->proc_id = 1;
+		proc->parent_id = 0;
+		proc_counter = 1;
+		proc_table[0] = proc;
+		//Inizialize the proc table
+		for(int i=1;i<MAX_PROC;i++){
+			proc_table[i] = NULL;
+		}
+	} else {
+		while(proc_table[index_proc_table] != NULL){
+			index_proc_table++;
+		}
+		proc->proc_id = index_proc_table;
+		if(index_proc_table == 1){
+			proc->parent_id = 1;
+		}
+		proc_table[index_proc_table] = proc;
+		proc_counter++;
+	}
+	proc->exit_status = false;
+	proc->exit_code = -1;
 
 	return proc;
 }
@@ -170,6 +207,17 @@ proc_destroy(struct proc *proc)
 
 	kfree(proc->p_name);
 	kfree(proc);
+
+	/* file table destroy  */
+	for(int i = 0; i < OPEN_MAX; i++) {
+		if(proc->file_table[i] != NULL){
+            lock_destroy(proc->file_table[i]->lock);
+            vfs_close(proc->file_table[i]->vnode);
+            kfree(proc->file_table[i]);
+			curproc->file_table[i] = NULL;
+		}
+    }
+
 }
 
 /*
@@ -205,7 +253,7 @@ proc_create_runprogram(const char *name)
 	newproc->p_addrspace = NULL;
 
 	/* VFS fields */
-
+	
 	/*
 	 * Lock the current process to copy its current directory.
 	 * (We don't need to lock the new process, though, as we have
@@ -217,7 +265,6 @@ proc_create_runprogram(const char *name)
 		newproc->p_cwd = curproc->p_cwd;
 	}
 	spinlock_release(&curproc->p_lock);
-
 	return newproc;
 }
 

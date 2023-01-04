@@ -30,6 +30,7 @@
 #ifndef _PROC_H_
 #define _PROC_H_
 
+
 /*
  * Definition of a process.
  *
@@ -39,6 +40,8 @@
 #include <spinlock.h>
 #include <file_syscall.h>
 #include <limits.h>
+
+#define MAX_PROC 8
 
 struct addrspace;
 struct thread;
@@ -74,12 +77,22 @@ struct proc {
 
 	/* add more material here as needed */
 	struct file_handle *file_table[OPEN_MAX];
+	pid_t proc_id; //pid
+	pid_t parent_id;//ppid
+	bool exit_status;
 	int exit_code;
+	struct lock *lock;
+	
 };
+
+
+
+/* Create a proc structure. */
+//struct proc *proc_create(const char *name);
 
 /* This is the process structure for the kernel and for kernel-only threads. */
 extern struct proc *kproc;
-
+extern int proc_counter;
 /* Call once during system startup to allocate data structures. */
 void proc_bootstrap(void);
 

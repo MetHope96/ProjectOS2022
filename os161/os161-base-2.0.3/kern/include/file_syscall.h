@@ -11,6 +11,13 @@ struct file_handle {
         struct vnode *vnode; // create a struct vnode
 };
 
+int sys_open(const char *filename, int flags, int *retfd);
+int sys_read(int fd, userptr_t buff, size_t buff_len, int *retval);
 int sys_write(int fd, userptr_t buff, size_t buff_len, int *retval);
+int sys_lseek(int fd, off_t pos, int whence, off_t *retval);
+int sys_close(int fd);
+int sys_dup2(int oldfd, int newfd);
+int sys_chdir(char *pathname);
+int sys_getcwd(char *buff, size_t buff_len);
 
 #endif
