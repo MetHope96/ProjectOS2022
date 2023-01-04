@@ -19,8 +19,8 @@
 int sys_open(const char *filename, int flags, int *retfd){
   bool append = false; // This is 0 if is not open in append mode
   int err = 0;
-  size_t len = PATH_MAX;
-  size_t actual;
+  //size_t len = PATH_MAX;
+  //size_t actual;
 
   char *file_name;
 
