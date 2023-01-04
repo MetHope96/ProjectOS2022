@@ -22,7 +22,7 @@ int sys_open(const char *filename, int flags, int *retfd){
   size_t len = PATH_MAX;
   size_t actual;
 
-  char *file_name[PATH_MAX];
+  char file_name[PATH_MAX];
 
   //Check if filename is invalid pointer
   if(filename == NULL){
