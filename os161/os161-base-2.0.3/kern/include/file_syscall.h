@@ -4,7 +4,7 @@
 #include <types.h>
 
 struct file_handle {
-        char *name;
+        //char *name;
         int flags;
         off_t offset;        // create a offset type for manage append
         struct lock *lock;   // create a lock struct

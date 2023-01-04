@@ -19,8 +19,8 @@
 int sys_open(const char *filename, int flags, int *retfd){
   bool append = false; // This is 0 if is not open in append mode
   int err = 0;
-  //size_t len = PATH_MAX;
-  //size_t actual;
+  size_t len = PATH_MAX;
+  size_t actual;
 
   char *file_name;
 
@@ -29,20 +29,13 @@ int sys_open(const char *filename, int flags, int *retfd){
     err = EFAULT;
     return err;
   }
-  
-  // Copy the filename string from user to kernel space to protect it
-    file_name = kstrdup((char *)filename);
-    if(file_name==NULL){
-        return ENOMEM;
-    }
 
-  /*int copyinside = copyinstr((const_userptr_t)filename, file_name, len, &actual);
+  int copyinside = copyinstr((const_userptr_t)filename, file_name, len, &actual);
   if(copyinside){
     return copyinside;
   }
-  */
 
-    switch(flags){
+  switch(flags){
         case O_RDONLY: break;
         case O_WRONLY: break;
         case O_RDWR: break;
@@ -67,7 +60,7 @@ int sys_open(const char *filename, int flags, int *retfd){
         default:
             err = EINVAL;
             return err;
-    }
+  }
   
   int i=3;
 
@@ -100,7 +93,8 @@ int sys_open(const char *filename, int flags, int *retfd){
     } else { //The file isn't open in append mode
     curproc->file_table[i]->offset = 0;
     }
-
+    
+    curproc->file_table[i]->flags = flags;
     curproc->file_table[i]->lock = lock_create("lock_fh"); //Create a lock for a file_handle
     if(curproc->file_table[i]->lock == NULL) {
       vfs_close(curproc->file_table[i]->vnode);
@@ -118,26 +112,26 @@ int sys_write(int fd, userptr_t buff, size_t buff_len, int *retval){
     return EBADF; //Fd is not a valid file descriptor
   }
 
-  /*
+  
   char *buffer = (char *)kmalloc(sizeof(*buff)*buff_len);//buff user, buffer kernel
   err = copyin((const_userptr_t)buff, buffer, buff_len);
   if(err) {
     kfree(buffer);
     return err;
   }
-  */
+  
 
   struct iovec iov;
   struct uio kuio;
 
   lock_acquire(curproc->file_table[fd]->lock);
-  uio_kinit(&iov, &kuio, buff, buff_len, curproc->file_table[fd]->offset, UIO_WRITE);
+  uio_kinit(&iov, &kuio, buffer, buff_len, curproc->file_table[fd]->offset, UIO_WRITE);
   kuio.uio_space = curproc->p_addrspace;
   kuio.uio_segflg = UIO_USERSPACE; // for user space address 
   
   err = VOP_WRITE (curproc->file_table[fd]->vnode, &kuio);
   if (err){
-    //kfree(buffer);
+    kfree(buffer);
     return err;
   }
 
@@ -145,7 +139,7 @@ int sys_write(int fd, userptr_t buff, size_t buff_len, int *retval){
 
   curproc->file_table[fd]->offset = kuio.uio_offset;
   lock_release(curproc->file_table[fd]->lock);
-  //kfree(buffer);
+  kfree(buffer);
   return 0;
 }
 
