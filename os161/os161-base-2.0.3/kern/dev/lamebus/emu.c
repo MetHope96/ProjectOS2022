@@ -55,6 +55,9 @@
 #include <emufs.h>
 #include "autoconf.h"
 
+#include <proc.h>
+#include <current.h>
+
 /* Register offsets */
 #define REG_HANDLE    0
 #define REG_OFFSET    4
