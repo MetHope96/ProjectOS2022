@@ -82,6 +82,7 @@ struct proc {
 	bool exit_status;
 	int exit_code;
 	struct lock *lock;
+	struct cv *cv;
 	
 };
 
