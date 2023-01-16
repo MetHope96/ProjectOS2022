@@ -168,7 +168,7 @@ syscall(struct trapframe *tf)
 		err = sys_getpid((pid_t *)&retval);
 		break;
 
-		case SYS_exit:
+		case SYS__exit:
 		sys_exit((int)tf->tf_a0);
 		err = 0;
 		break;
