@@ -75,8 +75,6 @@ struct proc {
 	/* VFS */
 	struct vnode *p_cwd;		/* current working directory */
 
-	char p_cwdpath[PATH_MAX+1]; /* String to store the current working directory pointed by p_cwd */
-
 	/* add more material here as needed */
 	struct file_handle *file_table[OPEN_MAX];
 	pid_t proc_id; //pid
