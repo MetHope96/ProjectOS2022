@@ -46,12 +46,15 @@ int main(){
 		return rval;
 	}
 
+	printf("The string read: %s\n",r_string);
+
 	rval = close(fd);
 	if (rval<0) {
 		printf("Error close: %s\n",strerror(errno));
 		return rval;
 	}
 
-
+	printf("Test finished\n");
+	
     return 0;
 }
