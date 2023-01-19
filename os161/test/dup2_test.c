@@ -5,6 +5,11 @@
 * 3) Read dup2 file in RDONLY mode wr_test.txt
 */
 
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+#include <errno.h>
+
 int main(){
     char file_name[20] = "wr_test.txt";
     char w_string[50] = "The pen is on the table";
