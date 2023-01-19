@@ -14,7 +14,7 @@ int main(){
     char file_name[20] = "wr_test.txt";
     char w_string[50] = "The pen is on the table";
     char r_string[50];
-    int fd, fd_dup, rval;
+    int fd, fd_dup = -1, rval;
     	
     fd = open(file_name, O_CREAT|O_WRONLY);
 	if (fd < 0) {
@@ -48,12 +48,6 @@ int main(){
 		return rval;
 	}
 
-    rval = close(fd);
-	if (rval<0) {
-		printf("Error close: %s\n",strerror(errno));
-		return rval;
-	}
-
 	rval = read(fd_dup, r_string, sizeof(r_string));
 	if (rval<0) {
 		printf("Error read: %s\n",strerror(errno));
@@ -62,7 +56,7 @@ int main(){
 
 	printf("The string read: %s\n",r_string);
 
-	rval = close(fd_dup);
+	rval = close(fd);
 	if (rval<0) {
 		printf("Error close: %s\n",strerror(errno));
 		return rval;
