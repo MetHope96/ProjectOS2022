@@ -22,7 +22,7 @@ int main(){
 	}
 
     rval = write(fd, w_string, strlen(w_string));
-	if (rv<0) {
+	if (rval<0) {
 		printf("Error write: %s\n",strerror(errno));
 		return rval;
 	}
