@@ -17,7 +17,7 @@ int main(){
     int rval;
     char path1[PATH_MAX];
 	char path2[PATH_MAX];
-	char newpath[PATH_MAX] = "emu0:/test_folder";
+	char newpath[PATH_MAX] = "emu0:/testbin";
 
     path_ret = getcwd(path1, sizeof(path1));
 	if(path_ret == NULL){
@@ -28,7 +28,7 @@ int main(){
     printf("The current dir is %s\n",path1);
 
 	rval = chdir(newpath);
-	if(rv == -1){
+	if(rval == -1){
 		printf("Error newpath: %s\n",strerror(errno));
 		return -1;
 	}
