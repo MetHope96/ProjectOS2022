@@ -34,15 +34,15 @@ int main(){
     printf("1)lseek, new position = %d\n ",rval);
     rval = write(fd, l_string, strlen(l_string));
 
-    rval = lseek(fd,3,SEEK_SET) // this moves the pointer 3 positions ahead starting from the beginning of the file
+    rval = lseek(fd,3,SEEK_SET); // this moves the pointer 3 positions ahead starting from the beginning of the file
     printf("2)lseek, new position = %d\n ",rval);
     rval = write(fd, l_string, strlen(l_string));
 
-    rval = lseek(fd,5,SEEK_CUR) // this moves the pointer 5 positions ahead from the current position in the file
+    rval = lseek(fd,5,SEEK_CUR); // this moves the pointer 5 positions ahead from the current position in the file
     printf("3)lseek, new position = %d\n ",rval);
     rval = write(fd, l_string, strlen(l_string));
     
-    rval = lseek(fd,-1,SEEK_CUR) // this moves the pointer -1 positions back from the current position in the file
+    rval = lseek(fd,-1,SEEK_CUR); // this moves the pointer -1 positions back from the current position in the file
     printf("4)lseek, new position = %d\n ",rval);
     rval = write(fd, l_string, strlen(l_string));
 
