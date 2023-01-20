@@ -23,7 +23,7 @@ int main(void){
     }else if(pid == 0){ // Child
         pid1 = getpid();
         printf("This is the child process with pid = %d\n",pid1);
-        exit(2);
+        _exit(2);
     
     }else{ // Parent
         pid2 = getpid();
