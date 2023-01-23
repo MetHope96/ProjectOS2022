@@ -46,6 +46,7 @@
 #include <test.h>
 #include <kern/unistd.h>
 #include <copyinout.h>
+#include <file_syscall.h>
 
 /*
  * Load program "progname" and start running it in usermode.

@@ -322,3 +322,64 @@ int sys_getcwd(char *buff, size_t buff_len){
 
   return 0;
 }
+
+int
+std_open(int fileno){
+  int fd, openflags, i;
+  mode_t mode;
+  struct vnode *v;
+  struct file_handle *fh=NULL;; 	
+  int result;
+  const char* inpath = "con:";
+  char path[5];
+  
+  strcpy(path, inpath);
+  switch(fileno){
+    case STDIN_FILENO:
+      openflags = O_RDONLY;
+      mode = 0;
+      fd = STDIN_FILENO;
+      break;
+    case STDOUT_FILENO:
+      openflags = O_WRONLY;
+      mode = 0;
+      fd = STDOUT_FILENO;
+      break;
+    case STDERR_FILENO:
+      openflags = O_WRONLY;
+      mode = 0;
+      fd = STDERR_FILENO;
+      break;
+    default:
+      return -1;
+      break;
+  }
+
+
+  result = vfs_open(path, openflags, mode, &v);
+  if (result) {
+    return -1;
+  }
+  /* search system open file table */
+  for (i=0; i<OPEN_MAX; i++) {
+    if (file_table[i].vn==NULL) {
+      fh = &(file_table)[i];
+      fh->vnode = v;
+      fh->offset = 0; // TODO: handle offset with append
+      fh->flags = openflags;
+      fh->lock = lock_create("fh");
+      break;
+    }
+  }
+  if (fh==NULL) { 
+    vfs_close(v);
+    return -1;
+  }
+
+
+  lock_acquire(curproc->lock);
+  curproc->fileTable[fd] = fh;
+  lock_release(curproc->lock);
+  return fd;
+
+}
