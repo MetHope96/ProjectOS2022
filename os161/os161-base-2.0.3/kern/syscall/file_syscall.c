@@ -362,8 +362,9 @@ std_open(int fileno){
   /* search system open file table */
   for (i=0; i<OPEN_MAX; i++) {
     if (curproc->file_table[i]->vnode==NULL) {
+      curproc->file_table[i] = (struct file_handle *)kmalloc(sizeof(struct file_handle));
       curproc->file_table[i]->vnode = v;
-      curproc->file_table[i]->offset = 0; // TODO: handle offset with append
+      curproc->file_table[i]->offset = 0; 
       curproc->file_table[i]->flags = openflags;
       curproc->file_table[i]->lock = lock_create("fh");
       break;
