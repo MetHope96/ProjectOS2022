@@ -53,6 +53,7 @@
 #include <platform/bus.h>
 #include <vfs.h>
 #include <emufs.h>
+#include <limits.h>
 #include "autoconf.h"
 
 /* Register offsets */
