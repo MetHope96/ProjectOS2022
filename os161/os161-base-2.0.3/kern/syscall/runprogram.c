@@ -44,6 +44,8 @@
 #include <vfs.h>
 #include <syscall.h>
 #include <test.h>
+#include <kern/unistd.h>
+#include <copyinout.h>
 
 /*
  * Load program "progname" and start running it in usermode.
@@ -52,7 +54,7 @@
  * Calls vfs_open on progname and thus may destroy it.
  */
 int
-runprogram(char *progname)
+runprogram(char *progname, int argc, char **argv)
 {
 	struct addrspace *as;
 	struct vnode *v;
@@ -79,6 +81,16 @@ runprogram(char *progname)
 	proc_setas(as);
 	as_activate();
 
+	if (std_open(STDIN_FILENO) != STDIN_FILENO){
+		return EIO;
+	}
+	if (std_open(STDOUT_FILENO) != STDOUT_FILENO){
+		return EIO;
+	}
+	if (std_open(STDERR_FILENO) != STDERR_FILENO){
+		return EIO;
+	}
+
 	/* Load the executable. */
 	result = load_elf(v, &entrypoint);
 	if (result) {
@@ -97,10 +109,37 @@ runprogram(char *progname)
 		return result;
 	}
 
+	vaddr_t argvptr;
+
+	// space for argv vector of pointers
+	stackptr -= (vaddr_t) ((argc+1)*sizeof(char*));
+
+	// address where to write the vector of pointers
+	argvptr = stackptr;
+
+	// copy arguments into user stack
+	for(int i = 0; i < argc; i++){
+		size_t copied = 0;
+		size_t arg_len = strlen(argv[i]) + 1;
+		stackptr -= arg_len;
+		result = copyoutstr(argv[i], (userptr_t) stackptr, arg_len, &copied);
+		if(result){
+			return result;
+		}
+		result = copyout(&stackptr, (userptr_t)argvptr + i*sizeof(char*), sizeof(char*));
+		if(result){
+			return result;
+		}
+	}
+
+	// NULL pointer at the end of the vector of pointers
+	bzero((void*)(argvptr + argc*sizeof(char*)), sizeof(char*));
+
 	/* Warp to user mode. */
-	enter_new_process(0 /*argc*/, NULL /*userspace addr of argv*/,
+	enter_new_process(argc, (userptr_t) argvptr,
 			  NULL /*userspace addr of environment*/,
-			  stackptr, entrypoint);
+			  (vaddr_t) stackptr, entrypoint);
+
 
 	/* enter_new_process does not return. */
 	panic("enter_new_process returned\n");
