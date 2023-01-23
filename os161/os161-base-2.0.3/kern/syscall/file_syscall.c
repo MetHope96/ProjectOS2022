@@ -361,7 +361,7 @@ std_open(int fileno){
   }
   /* search system open file table */
   for (i=0; i<OPEN_MAX; i++) {
-    if (curproc->file_table[i]->vnode==NULL) {
+    if (curproc->file_table[i]==NULL) {
       curproc->file_table[i] = (struct file_handle *)kmalloc(sizeof(struct file_handle));
       curproc->file_table[i]->vnode = v;
       curproc->file_table[i]->offset = 0; 
