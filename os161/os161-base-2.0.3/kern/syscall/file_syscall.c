@@ -327,8 +327,7 @@ int
 std_open(int fileno){
   int fd, openflags, i;
   mode_t mode;
-  struct vnode *v;
-  struct file_handle *fh=NULL;; 	
+  struct vnode *v;	
   int result;
   const char* inpath = "con:";
   char path[5];
@@ -362,24 +361,15 @@ std_open(int fileno){
   }
   /* search system open file table */
   for (i=0; i<OPEN_MAX; i++) {
-    if (file_table[i].vn==NULL) {
-      fh = &(file_table)[i];
-      fh->vnode = v;
-      fh->offset = 0; // TODO: handle offset with append
-      fh->flags = openflags;
-      fh->lock = lock_create("fh");
+    if (curproc->file_table[i].vnode==NULL) {
+      curproc->file_table[i]->vnode = v;
+      curproc->file_table[i]->offset = 0; // TODO: handle offset with append
+      curproc->file_table[i]->flags = openflags;
+      curproc->file_table[i]->lock = lock_create("fh");
       break;
     }
   }
-  if (fh==NULL) { 
-    vfs_close(v);
-    return -1;
-  }
 
-
-  lock_acquire(curproc->lock);
-  curproc->fileTable[fd] = fh;
-  lock_release(curproc->lock);
   return fd;
 
 }
