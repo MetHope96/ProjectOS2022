@@ -326,27 +326,30 @@ int sys_getcwd(char *buff, size_t buff_len){
 int
 std_open(int fileno){
   int fd, openflags, i;
-  mode_t mode;
   struct vnode *v;	
   int result;
-  const char* inpath = "con:";
-  char path[5];
+  const char* filename = "con:";
+  size_t len = 5;
+  size_t actual;
+
+  char file_name[5];
   
-  strcpy(path, inpath);
+  int copyinside = copyinstr((const_userptr_t)filename, file_name, len, &actual);
+  if(copyinside){
+    return copyinside;
+  }
+
   switch(fileno){
     case STDIN_FILENO:
       openflags = O_RDONLY;
-      mode = 0;
       fd = STDIN_FILENO;
       break;
     case STDOUT_FILENO:
       openflags = O_WRONLY;
-      mode = 0;
       fd = STDOUT_FILENO;
       break;
     case STDERR_FILENO:
       openflags = O_WRONLY;
-      mode = 0;
       fd = STDERR_FILENO;
       break;
     default:
@@ -355,7 +358,7 @@ std_open(int fileno){
   }
 
 
-  result = vfs_open(path, openflags, mode, &v);
+  result = vfs_open(file_name, openflags, 0664, &v);
   if (result) {
     return -1;
   }
