@@ -326,7 +326,7 @@ int sys_getcwd(char *buff, size_t buff_len){
 int
 std_open(int fileno){
   int fd, i = 0;
-  int err;
+  int err, flags;
   const char* filename = "con:";
   size_t len = 5;
   size_t actual;
@@ -340,15 +340,15 @@ std_open(int fileno){
 
   switch(fileno){
     case STDIN_FILENO:
-      openflags = O_RDONLY;
+      flags = O_RDONLY;
       fd = STDIN_FILENO;
       break;
     case STDOUT_FILENO:
-      openflags = O_WRONLY;
+      flags = O_WRONLY;
       fd = STDOUT_FILENO;
       break;
     case STDERR_FILENO:
-      openflags = O_WRONLY;
+      flags = O_WRONLY;
       fd = STDERR_FILENO;
       break;
     default:
