@@ -328,15 +328,10 @@ std_open(int fileno){
   int fd, i = 0;
   int err, flags;
   const char* filename = "con:";
-  size_t len = 5;
-  size_t actual;
 
   char file_name[5];
-  
-  int copyinside = copyinstr((const_userptr_t)filename, file_name, len, &actual);
-  if(copyinside){
-    return copyinside;
-  }
+
+  strcpy(file_name, filename);
 
   switch(fileno){
     case STDIN_FILENO:
