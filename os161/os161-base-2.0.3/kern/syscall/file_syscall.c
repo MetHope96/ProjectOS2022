@@ -325,9 +325,8 @@ int sys_getcwd(char *buff, size_t buff_len){
 
 int
 std_open(int fileno){
-  int fd, openflags, i = 0;
-  struct vnode *v;	
-  int result;
+  int fd, i = 0;
+  int err;
   const char* filename = "con:";
   size_t len = 5;
   size_t actual;
