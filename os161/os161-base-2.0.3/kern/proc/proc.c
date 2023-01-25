@@ -83,6 +83,7 @@ proc_create(const char *name)
 
 	proc->p_numthreads = 0;
 	spinlock_init(&proc->p_lock);
+	proc->lock = lock_create("proc_lock");
 
 	/* VM fields */
 	proc->p_addrspace = NULL;
@@ -204,13 +205,12 @@ proc_destroy(struct proc *proc)
 
 	KASSERT(proc->p_numthreads == 0);
 	spinlock_cleanup(&proc->p_lock);
-
+	lock_destroy(proc->lock)
 	kfree(proc->p_name);
 	kfree(proc);
 
 	
 	/* file table destroy  */
-	/*
 	for(int i = 0; i < OPEN_MAX; i++) {
 		if(proc->file_table[i] != NULL){
             lock_destroy(proc->file_table[i]->lock);
@@ -219,7 +219,7 @@ proc_destroy(struct proc *proc)
 			curproc->file_table[i] = NULL;
 		}
     }
-	*/
+	
 }
 
 /*
