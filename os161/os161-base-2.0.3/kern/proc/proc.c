@@ -208,7 +208,9 @@ proc_destroy(struct proc *proc)
 	kfree(proc->p_name);
 	kfree(proc);
 
+	
 	/* file table destroy  */
+	/*
 	for(int i = 0; i < OPEN_MAX; i++) {
 		if(proc->file_table[i] != NULL){
             lock_destroy(proc->file_table[i]->lock);
@@ -217,7 +219,7 @@ proc_destroy(struct proc *proc)
 			curproc->file_table[i] = NULL;
 		}
     }
-
+	*/
 }
 
 /*
