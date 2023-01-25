@@ -97,6 +97,9 @@ proc_create(const char *name)
 		proc->file_table[i] = NULL;
 	}
 
+	proc->exit_status = false;
+	proc->exit_code = -1;
+
 	/*Defined the initial value */
 	if(strcmp(name,"[kernel]") == 0){
 		proc->proc_id = 1;
@@ -118,8 +121,6 @@ proc_create(const char *name)
 		proc_table[index_proc_table] = proc;
 		proc_counter++;
 	}
-	proc->exit_status = false;
-	proc->exit_code = -1;
 
 	return proc;
 }
