@@ -114,7 +114,7 @@ proc_create(const char *name)
 		while(proc_table[index_proc_table] != NULL){
 			index_proc_table++;
 		}
-		proc->proc_id = index_proc_table;
+		proc->proc_id = index_proc_table+1;
 		if(index_proc_table == 1){
 			proc->parent_id = 1;
 		}
@@ -218,6 +218,7 @@ proc_destroy(struct proc *proc)
 			curproc->file_table[i] = NULL;
 		}
     }
+	proc_table[proc_id-1] = NULL;
 	kfree(proc->p_name);
 	kfree(proc);
 	
