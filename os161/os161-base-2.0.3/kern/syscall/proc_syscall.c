@@ -105,6 +105,7 @@ int sys_fork(pid_t *child_pid, struct trapframe *tf){
 }
 
 void sys_exit(int exitcode){
+	/*
 	int i = 0;
 
 	for(i = 0; i < MAX_PROC; i++){
@@ -123,6 +124,24 @@ void sys_exit(int exitcode){
 	KASSERT(curproc->exit_code == proc_table[i]->exit_code);
 	lock_release(curproc->lock);
 	thread_exit();
+	*/
+    struct proc *p = curproc;
+    pid_t pid = p->proc_id;
+
+    // Store the passed exit code (readable by sys_waitpid)
+    p->exit_code = exitcode;
+
+    // Current process is ready to exit
+    p->exit_status = true;
+
+    // Process table is free
+    proc_table[pid] = NULL;
+
+    // Causes the current thread to exit by detaching it from process.
+    // The process is made zombie (waiting for its removal but still in memory)
+    thread_exit();
+
+    return 0;
 }
 
 int sys_waitpid(pid_t pid, int *status, int options, pid_t* retval) {
