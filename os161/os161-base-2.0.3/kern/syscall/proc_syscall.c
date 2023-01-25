@@ -140,8 +140,6 @@ void sys_exit(int exitcode){
     // Causes the current thread to exit by detaching it from process.
     // The process is made zombie (waiting for its removal but still in memory)
     thread_exit();
-
-    return 0;
 }
 
 int sys_waitpid(pid_t pid, int *status, int options, pid_t* retval) {
