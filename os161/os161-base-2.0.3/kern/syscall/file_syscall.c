@@ -125,9 +125,13 @@ int sys_write(int fd, userptr_t buff, size_t buff_len, int *retval){
   struct uio kuio;
 
   lock_acquire(curproc->file_table[fd]->lock);
+  if(fd < 3){
+  uio_kinit(&iov, &kuio, buff, buff_len, curproc->file_table[fd]->offset, UIO_WRITE);
+  }else{
   uio_kinit(&iov, &kuio, buffer, buff_len, curproc->file_table[fd]->offset, UIO_WRITE);
   kuio.uio_space = curproc->p_addrspace;
-  kuio.uio_segflg = UIO_USERISPACE; // for user space address 
+  kuio.uio_segflg = UIO_USERSPACE; // for user space address 
+  }
 
   err = VOP_WRITE (curproc->file_table[fd]->vnode, &kuio);
   if (err){
@@ -156,11 +160,11 @@ int sys_read(int fd, userptr_t buff, size_t buff_len, int *retval){
   struct iovec iov;
   struct uio kuio;
   lock_acquire (curproc->file_table[fd]->lock);
-
   uio_kinit(&iov, &kuio, buff, buff_len, curproc->file_table[fd]->offset, UIO_READ);
+  if(fd>2){
   kuio.uio_space = curproc->p_addrspace;
-  kuio.uio_segflg = UIO_USERISPACE; // for user space address 
-
+  kuio.uio_segflg = UIO_USERSPACE; // for user space address 
+  }
   err = VOP_READ(curproc->file_table[fd]->vnode, &kuio);
   if (err){
 	 lock_release(curproc->file_table[fd]->lock);
