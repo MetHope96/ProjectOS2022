@@ -84,6 +84,7 @@ proc_create(const char *name)
 	proc->p_numthreads = 0;
 	spinlock_init(&proc->p_lock);
 	proc->lock = lock_create("proc_lock");
+	proc->cv = cv_create("proc_cv");
 
 	/* VM fields */
 	proc->p_addrspace = NULL;
@@ -206,6 +207,7 @@ proc_destroy(struct proc *proc)
 	KASSERT(proc->p_numthreads == 0);
 	spinlock_cleanup(&proc->p_lock);
 	lock_destroy(proc->lock);
+	cv_destroy(proc->cv);
 	kfree(proc->p_name);
 	kfree(proc);
 
