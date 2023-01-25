@@ -134,15 +134,6 @@ proc_create(const char *name)
 void
 proc_destroy(struct proc *proc)
 {
-		/* file table destroy  */
-	for(int i = 0; i < OPEN_MAX; i++) {
-		if(proc->file_table[i] != NULL){
-            lock_destroy(proc->file_table[i]->lock);
-            vfs_close(proc->file_table[i]->vnode);
-            kfree(proc->file_table[i]);
-			curproc->file_table[i] = NULL;
-		}
-    }
 	/*
 	 * You probably want to destroy and null out much of the
 	 * process (particularly the address space) at exit time if
@@ -218,6 +209,15 @@ proc_destroy(struct proc *proc)
 	spinlock_cleanup(&proc->p_lock);
 	lock_destroy(proc->lock);
 	cv_destroy(proc->cv);
+			/* file table destroy  */
+	for(int i = 0; i < OPEN_MAX; i++) {
+		if(proc->file_table[i] != NULL){
+            lock_destroy(proc->file_table[i]->lock);
+            vfs_close(proc->file_table[i]->vnode);
+            kfree(proc->file_table[i]);
+			curproc->file_table[i] = NULL;
+		}
+    }
 	kfree(proc->p_name);
 	kfree(proc);
 	

@@ -117,7 +117,7 @@ void sys_exit(int exitcode){
 	}
 
 	lock_acquire(curproc->lock);
-	curproc->exit_status = true;
+	curproc->exit_status = 1;
 	curproc->exit_code = _MKWAIT_EXIT(exitcode);
 	KASSERT(curproc->exit_status == proc_table[i]->exit_status);
 	KASSERT(curproc->exit_code == proc_table[i]->exit_code);
