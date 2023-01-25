@@ -115,9 +115,9 @@ void sys_exit(int exitcode){
 		if(i == MAX_PROC - 1)
 		panic("Current process not found in process table");
 	}
+	curproc->exit_status = true;
 
 	lock_acquire(curproc->lock);
-	curproc->exit_status = true;
 	curproc->exit_code = _MKWAIT_EXIT(exitcode);
 	KASSERT(curproc->exit_status == proc_table[i]->exit_status);
 	KASSERT(curproc->exit_code == proc_table[i]->exit_code);
