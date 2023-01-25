@@ -106,6 +106,7 @@ int sys_fork(pid_t *child_pid, struct trapframe *tf){
 
 void sys_exit(int exitcode){
 	int i = 0;
+	struct proc *p = curproc;
 
 	for(i = 0; i < MAX_PROC; i++){
 		if(proc_table[i] != NULL){
@@ -116,11 +117,13 @@ void sys_exit(int exitcode){
 		panic("Current process not found in process table");
 	}
 
-	curproc->exit_status = true;
-	curproc->exit_code = _MKWAIT_EXIT(exitcode);
-	KASSERT(curproc->exit_status == proc_table[i]->exit_status);
-	KASSERT(curproc->exit_code == proc_table[i]->exit_code);
-
+  	spinlock_acquire(&p->p_lock);
+	lock_acquire(curproc->lock);
+	p->exit_status = true;
+	p->exit_code = _MKWAIT_EXIT(exitcode);
+	KASSERT(p->exit_status == proc_table[i]->exit_status);
+	KASSERT(p->exit_code == proc_table[i]->exit_code);
+	spinlock_release(&p->p_lock);
 	thread_exit();
 }
 
