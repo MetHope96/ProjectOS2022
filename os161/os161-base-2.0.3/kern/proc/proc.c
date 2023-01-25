@@ -205,7 +205,7 @@ proc_destroy(struct proc *proc)
 
 	KASSERT(proc->p_numthreads == 0);
 	spinlock_cleanup(&proc->p_lock);
-	lock_destroy(proc->lock)
+	lock_destroy(proc->lock);
 	kfree(proc->p_name);
 	kfree(proc);
 
