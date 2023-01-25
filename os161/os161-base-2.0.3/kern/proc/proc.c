@@ -218,7 +218,7 @@ proc_destroy(struct proc *proc)
 			curproc->file_table[i] = NULL;
 		}
     }
-	proc_table[proc_id-1] = NULL;
+	proc_table[proc->proc_id-1] = NULL;
 	kfree(proc->p_name);
 	kfree(proc);
 	
