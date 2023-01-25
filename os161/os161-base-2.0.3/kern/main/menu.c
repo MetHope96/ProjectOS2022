@@ -42,6 +42,7 @@
 #include <vfs.h>
 #include <sfs.h>
 #include <syscall.h>
+#include <proc_syscall.h>
 #include <test.h>
 #include <current.h>
 #include "opt-sfs.h"
