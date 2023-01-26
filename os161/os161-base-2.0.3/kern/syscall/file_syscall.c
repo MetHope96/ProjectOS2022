@@ -112,30 +112,25 @@ int sys_open(userptr_t filename, int flags, int *retfd){
 
 int sys_write(int fd, userptr_t buff, size_t buff_len, int *retval){
   int err;
+
+  lock_acquire(curproc->file_table[fd]->lock);
+
   if (fd < 0 || fd >= OPEN_MAX){
     return EBADF; //Fd is not a valid file descriptor
   }
-
   
-  char *buffer = (char *)kmalloc(sizeof(*buff)*buff_len);//buff user, buffer kernel
-  err = copyin((const_userptr_t)buff, buffer, buff_len);
-  if(err) {
-    kfree(buffer);
-    return err;
+  // - Part or all of the address space pointed to by buf is invalid
+  if(buff == NULL){
+        err = EFAULT;
+        return err;
   }
   
-
   struct iovec iov;
   struct uio kuio;
 
-  lock_acquire(curproc->file_table[fd]->lock);
-  if(fd < 3){
   uio_kinit(&iov, &kuio, buff, buff_len, curproc->file_table[fd]->offset, UIO_WRITE);
-  }else{
-  uio_kinit(&iov, &kuio, buffer, buff_len, curproc->file_table[fd]->offset, UIO_WRITE);
   kuio.uio_space = curproc->p_addrspace;
   kuio.uio_segflg = UIO_USERSPACE; // for user space address 
-  }
 
   err = VOP_WRITE (curproc->file_table[fd]->vnode, &kuio);
   if (err){
@@ -153,6 +148,9 @@ int sys_write(int fd, userptr_t buff, size_t buff_len, int *retval){
 
 int sys_read(int fd, userptr_t buff, size_t buff_len, int *retval){
   int err;
+
+  lock_acquire (curproc->file_table[fd]->lock);
+
   if (fd < 0 || fd >= OPEN_MAX || curproc->file_table[fd] == NULL){
     return EBADF; // Fd is not a valid file descriptor
   }
@@ -163,12 +161,11 @@ int sys_read(int fd, userptr_t buff, size_t buff_len, int *retval){
 
   struct iovec iov;
   struct uio kuio;
-  lock_acquire (curproc->file_table[fd]->lock);
+
   uio_kinit(&iov, &kuio, buff, buff_len, curproc->file_table[fd]->offset, UIO_READ);
-  if(fd>2){
   kuio.uio_space = curproc->p_addrspace;
   kuio.uio_segflg = UIO_USERSPACE; // for user space address 
-  }
+
   err = VOP_READ(curproc->file_table[fd]->vnode, &kuio);
   if (err){
 	 lock_release(curproc->file_table[fd]->lock);
@@ -184,6 +181,9 @@ int sys_read(int fd, userptr_t buff, size_t buff_len, int *retval){
 }
 
 int sys_close(int fd){
+
+  lock_acquire(curproc->lock);
+
   if (fd < 0 || fd >= OPEN_MAX || curproc->file_table[fd] == NULL){
     return EBADF; // Fd is not a valid file descriptor
   }
@@ -192,6 +192,9 @@ int sys_close(int fd){
   vfs_close(curproc->file_table[fd]->vnode);
   kfree(curproc->file_table[fd]);
 	curproc->file_table[fd] = NULL;
+
+  lock_release(curproc->lock);
+
   return 0;
 }
 
@@ -375,6 +378,8 @@ std_open(int fileno){
       return err;
     }
 
+    lock_acquire(curproc->lock);
+
     curproc->file_table[i]->offset = 0;
     curproc->file_table[i]->flags = flags;
     curproc->file_table[i]->lock = lock_create("lock_fh"); //Create a lock for a file_handle
@@ -383,6 +388,7 @@ std_open(int fileno){
     	kfree(curproc->file_table[i]);
     	curproc->file_table[i] = NULL;
     }
+    lock_release(curproc->lock);
 
   return fd;
 
