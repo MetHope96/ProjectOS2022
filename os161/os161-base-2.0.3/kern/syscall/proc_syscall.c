@@ -116,11 +116,10 @@ void sys_exit(int exitcode){
 		panic("Current process not found in process table");
 	}
 
- 	//spinlock_acquire(&curproc->p_lock);
+ 	spinlock_acquire(&curproc->p_lock);
 	curproc->exit_status = 1;
-	//curproc->exit_code = _MKWAIT_EXIT(exitcode);
-	curproc->exit_code = exitcode;
-	//spinlock_release(&curproc->p_lock);
+	curproc->exit_code = _MKWAIT_EXIT(exitcode);
+	spinlock_release(&curproc->p_lock);
 	KASSERT(curproc->exit_status == proc_table[i]->exit_status);
 	KASSERT(curproc->exit_code == proc_table[i]->exit_code);
 
