@@ -230,11 +230,12 @@ enter_forked_process(struct trapframe *tf)
 {
 	struct trapframe tf_child = *tf;
 
-	as_activate();
+	
 	//kfree(tf);
 	tf_child.tf_v0 = 0;
 	tf_child.tf_a3 = 0;
 	tf_child.tf_epc += 4;
 
+	as_activate();
 	mips_usermode(&tf_child);
 }
