@@ -114,9 +114,9 @@ kill_curthread(vaddr_t epc, unsigned code, vaddr_t vaddr)
 	/*
 	 * You will probably want to change this.
 	 */
-	curproc->exit_status = 1;
-	if(sig == SIGSEGV){
-		curproc->exit_code = _MKWAIT_CORE(sig);
+	curproc->exit_status = 1; 
+	if(sig == SIGSEGV){ // segment violation
+		curproc->exit_code = _MKWAIT_CORE(sig); //Encoding macros, used by the kernel to generate the wait result.
 	}
 	else{
 		curproc->exit_code = _MKWAIT_SIG(sig);

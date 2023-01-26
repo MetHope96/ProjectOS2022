@@ -82,6 +82,7 @@ runprogram(char *progname, int argc, char **argv)
 	proc_setas(as);
 	as_activate();
 
+	/* STDIN, STDOUT e STDERR open*/
 	if (std_open(STDIN_FILENO) != STDIN_FILENO){
 		return EIO;
 	}
