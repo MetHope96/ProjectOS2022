@@ -16,13 +16,11 @@
 #include <copyinout.h>
 #include <kern/seek.h>
 
-int sys_open(const char *filename, int flags, int *retfd){
+int sys_open(userptr_t filename, int flags, int *retfd){
   bool append = false; // This is 0 if is not open in append mode
   int err = 0;
-  size_t len = PATH_MAX;
-  size_t actual;
 
-  char file_name[PATH_MAX];
+  char *kfilename;
 
   //Check if filename is invalid pointer
   if(filename == NULL){
@@ -30,10 +28,11 @@ int sys_open(const char *filename, int flags, int *retfd){
     return err;
   }
 
-  int copyinside = copyinstr((const_userptr_t)filename, file_name, len, &actual);
-  if(copyinside){
-    return copyinside;
-  }
+    // Copy the filename string from user to kernel space to protect it
+    kfilename = kstrdup((char *)filename);
+    if(kfilename==NULL){
+        return ENOMEM;
+    }
 
   switch(flags){
         case O_RDONLY: break;
@@ -72,13 +71,15 @@ int sys_open(const char *filename, int flags, int *retfd){
     }
 
     curproc->file_table[i] = (struct file_handle *)kmalloc(sizeof(struct file_handle));
-    err = vfs_open(file_name, flags, 0664, &curproc->file_table[i]->vnode);
+    err = vfs_open(kfilename, flags, 0664, &curproc->file_table[i]->vnode);
 
     if (err){
       kfree(curproc->file_table[i]);
       curproc->file_table[i]=NULL;
       return err;
-    }
+    } 
+
+    lock_acquire(curproc->lock);
 
     if(append){ // The file is open in append mode
       struct stat statbuf;
@@ -101,6 +102,9 @@ int sys_open(const char *filename, int flags, int *retfd){
     	kfree(curproc->file_table[i]);
     	curproc->file_table[i] = NULL;
     }
+
+    lock_release(curproc->lock);
+
       *retfd = i;
     	return 0;
 }
