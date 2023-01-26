@@ -134,7 +134,6 @@ int sys_write(int fd, userptr_t buff, size_t buff_len, int *retval){
 
   err = VOP_WRITE (curproc->file_table[fd]->vnode, &kuio);
   if (err){
-    kfree(buffer);
     return err;
   }
 
@@ -142,7 +141,6 @@ int sys_write(int fd, userptr_t buff, size_t buff_len, int *retval){
 
   curproc->file_table[fd]->offset = kuio.uio_offset;
   lock_release(curproc->file_table[fd]->lock);
-  kfree(buffer);
   return 0;
 }
 
