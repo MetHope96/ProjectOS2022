@@ -265,7 +265,7 @@ int sys_lseek(int fd, off_t pos, int whence, off_t *retval){
 
 }
 
-
+/*
 int sys_dup2(int oldfd, int newfd) {
   //Check if the oldfd and newfd is a valid parameters
   if (oldfd >= OPEN_MAX || oldfd < 0 || newfd >= OPEN_MAX || newfd < 0){
@@ -286,6 +286,46 @@ int sys_dup2(int oldfd, int newfd) {
     curproc->file_table[newfd] = fpointer;
   return 0;
 }
+*/
+int 
+sys_dup2(int oldfd, int newfd, int *retval){
+  struct file_handle *old_fh, *new_fh;
+  struct vnode *vn;
+
+  if(oldfd < 0 || newfd < 0 || oldfd >= OPEN_MAX || newfd >= OPEN_MAX){
+    *retval = EBADF;
+    return -1;
+  }
+
+  if(oldfd == newfd)
+    return newfd;
+  
+  lock_acquire(curproc->lock);
+  old_fh = curproc->file_table[oldfd];
+  new_fh = curproc->file_table[newfd];
+
+  if(old_fh == NULL){
+    lock_release(curproc->lock);
+    *retval = EBADF;
+    return -1;
+  }
+
+  if(new_fh != NULL){
+    // close the file
+    curproc->file_table[newfd] = NULL;
+      vfs_close(vn); 
+      lock_destroy(new_fh->lock);	
+  }
+
+  curproc->file_table[newfd] = old_fh;
+  lock_release(curproc->lock);
+  lock_acquire(old_of->fh_lock);
+  VOP_INCREF(old_fh->vnode);
+
+  lock_release(old_fh->lock);
+  return newfd;
+}
+
 
 int 
 sys_chdir(userptr_t path, int *retval){
@@ -338,7 +378,6 @@ sys_chdir(userptr_t path, int *retval){
     return 0;
 }
 
-// sys___getcwd
 int 
 sys___getcwd(userptr_t buf, size_t buf_len, int *retval){
     int err;
