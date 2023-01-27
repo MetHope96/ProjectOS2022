@@ -289,7 +289,7 @@ int sys_dup2(int oldfd, int newfd) {
 */
 int 
 sys_dup2(int oldfd, int newfd, int *retval){
-  int err
+  int err;
 
   if(oldfd < 0 || newfd < 0 || oldfd >= OPEN_MAX || newfd >= OPEN_MAX){
     err = EBADF;
@@ -311,6 +311,7 @@ sys_dup2(int oldfd, int newfd, int *retval){
   
   *retval = newfd;
   return 0;
+
 }
 
 
