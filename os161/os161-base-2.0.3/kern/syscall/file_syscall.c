@@ -294,7 +294,7 @@ sys_chdir(userptr_t path, int *errp){
     int err;
     struct vnode *dir;
     
-    if(path == NULL || !is_valid_pointer(path, proc_getas())){
+    if(path == NULL){
         *errp = EFAULT;
         return -1;
     }
