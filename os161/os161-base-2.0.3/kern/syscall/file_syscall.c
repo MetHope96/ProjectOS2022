@@ -306,35 +306,35 @@ sys_chdir(userptr_t path, int *retval){
     struct vnode *dir_vn;
     
     if(path == NULL){
-        *retval = EFAULT;
-        return -1;
+        err = EFAULT;
+        return err;
     }
 
     if(path != NULL && strlen((char*)path) > PATH_MAX){
-        *retval = ENAMETOOLONG;
-        return -1;
+        err = ENAMETOOLONG;
+        return err;
     }
     
     len = strlen((char*)path) + 1;
 
     k_buf = kmalloc(len * sizeof(char));
     if(k_buf == NULL){
-        *retval = ENOMEM;
-        return -1;
+        err = ENOMEM;
+        return err;
     }
 
     err = copyinstr(path, k_buf, len, NULL);
     if (err){
         kfree(k_buf);
-        *retval = err;
-        return -1;
+        return err;
     }
 
     err = vfs_open( k_buf, O_RDONLY, 0644, &dir_vn );
 	if( err ){
         kfree(k_buf);
-        *retval = err;
-        return -1;
+        return err;
+    }else{
+      *retval = 0;
     }
 
     err = vfs_setcurdir( dir_vn );
@@ -343,8 +343,7 @@ sys_chdir(userptr_t path, int *retval){
 
 	if( err ){
         kfree(k_buf);
-        *retval = err;
-        return -1;
+        return err;
     }
     kfree(k_buf);
     return 0;
