@@ -328,44 +328,45 @@ sys_chdir(userptr_t path, int *retval){
     struct vnode *dir_vn;
     
     if(path == NULL){
-        err = EFAULT;
-        return err;
+        *retval = EFAULT;
+        return -1;
     }
 
     if(path != NULL && strlen((char*)path) > PATH_MAX){
-        err = ENAMETOOLONG;
-        return err;
+        *retval = ENAMETOOLONG;
+        return -1;
     }
     
     len = strlen((char*)path) + 1;
 
     k_buf = kmalloc(len * sizeof(char));
     if(k_buf == NULL){
-        err = ENOMEM;
-        return err;
+        *retval = ENOMEM;
+        return -1;
     }
 
     err = copyinstr(path, k_buf, len, NULL);
     if (err){
         kfree(k_buf);
-        return err;
+        *retval = err;
+        return -1;
     }
 
     err = vfs_open( k_buf, O_RDONLY, 0644, &dir_vn );
 	if( err ){
         kfree(k_buf);
-        return err;
-  }else{ 
-        *retval = 0;
-  }
+        *retval = err;
+        return -1;
+    }
 
-  err = vfs_setcurdir( dir_vn );
+    err = vfs_setcurdir( dir_vn );
 
 	vfs_close( dir_vn );
 
 	if( err ){
         kfree(k_buf);
-        return err;
+        *retval = err;
+        return -1;
     }
     kfree(k_buf);
     return 0;
