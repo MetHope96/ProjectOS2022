@@ -95,6 +95,7 @@ int sys_open(userptr_t filename, int flags, int *retfd){
     curproc->file_table[i]->offset = 0;
     }
     
+    curproc->file_table[i]->ref_count = 1;
     curproc->file_table[i]->flags = flags;
     curproc->file_table[i]->lock = lock_create("lock_fh"); //Create a lock for a file_handle
     if(curproc->file_table[i]->lock == NULL) {
@@ -186,10 +187,14 @@ int sys_close(int fd){
     return EBADF; // Fd is not a valid file descriptor
   }
 
+  curproc->file_table[fd]->ref_count -- ;
+
+  if(curproc->file_table[fd]->ref_count == 0){
   lock_destroy(curproc->file_table[fd]->lock);
   vfs_close(curproc->file_table[fd]->vnode);
   kfree(curproc->file_table[fd]);
 	curproc->file_table[fd] = NULL;
+  }
 
   lock_release(curproc->lock);
 
@@ -308,6 +313,7 @@ sys_dup2(int oldfd, int newfd, int *retval){
   }
 
   curproc->file_table[newfd] = curproc->file_table[oldfd];
+  curproc->file_table[oldfd]->ref_count++;
   
   *retval = newfd;
   return 0;

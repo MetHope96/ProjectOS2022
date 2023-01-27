@@ -4,11 +4,11 @@
 #include <types.h>
 
 struct file_handle {
-        //char *name;
         int flags;
         off_t offset;        // create a offset type for manage append
         struct lock *lock;   // create a lock struct
         struct vnode *vnode; // create a struct vnode
+        int ref_count;
 };
 
 int sys_open(userptr_t filename, int flags, int *retfd);
