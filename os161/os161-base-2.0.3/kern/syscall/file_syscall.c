@@ -319,7 +319,7 @@ sys_dup2(int oldfd, int newfd, int *retval){
 
   curproc->file_table[newfd] = old_fh;
   lock_release(curproc->lock);
-  lock_acquire(old_of->fh_lock);
+  lock_acquire(old_fh->lock);
   VOP_INCREF(old_fh->vnode);
 
   lock_release(old_fh->lock);
