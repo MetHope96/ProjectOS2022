@@ -301,7 +301,7 @@ sys_dup2(int oldfd, int newfd, int *retval){
       return 0;
   }
 
-  if(curproc->file_table[newfd]; != NULL){
+  if(curproc->file_table[newfd] != NULL){
     err = sys_close(newfd);
     if(err)
       return err;
