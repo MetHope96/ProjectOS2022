@@ -313,8 +313,18 @@ sys_dup2(int oldfd, int newfd, int *retval){
   if(new_fh != NULL){
     // close the file
     curproc->file_table[newfd] = NULL;
+    lock_acquire(new_fh->lock);
+    vn = new_fh->vn;
+    new_fh->vn = NULL;
+    lock_release(new_fh->lock);
+    if (vn == NULL) {
+      lock_release(curproc->lock);
+      *errp = EIO;
+      return -1;
+    }
       vfs_close(vn); 
       lock_destroy(new_fh->lock);	
+    
   }
 
   curproc->file_table[newfd] = old_fh;
