@@ -288,49 +288,89 @@ int sys_dup2(int oldfd, int newfd) {
 }
 
 
-int sys_chdir(char *pathname){
+int 
+sys_chdir(userptr_t path, int *errp){
+    char* kern_buf;
+    int err;
+    struct vnode *dir;
+    
+    if(path == NULL || !is_valid_pointer(path, proc_getas())){
+        *errp = EFAULT;
+        return -1;
+    }
 
-  char newPathName[NAME_MAX]; // NAME_MAX = 255
-  size_t actual;
-  int err;
+    if(path != NULL && strlen((char*)path) > PATH_MAX){
+        *errp = ENAMETOOLONG;
+        return -1;
+    }
+    
+    int len = strlen((char*)path) + 1;
 
-  if (pathname == NULL) {
-    return EFAULT; // Part or all of the address space pointed to by buf is invalid.
-  }
-  //copyinstr
-  if ((err =  copyinstr((const_userptr_t)pathname, newPathName, NAME_MAX, &actual) != 0)){
-		return err;
-	}
+    kern_buf = kmalloc(len * sizeof(char));
+    if(kern_buf == NULL){
+        *errp = ENOMEM;
+        return -1;
+    }
 
-  err = vfs_chdir(pathname); // Set current directory, as a pathname.
-  return err;
+    err = copyinstr(path, kern_buf, len, NULL);
+    if (err){
+        kfree(kern_buf);
+        *errp = err;
+        return -1;
+    }
 
+    err = vfs_open( kern_buf, O_RDONLY, 0644, &dir );
+	if( err ){
+        kfree(kern_buf);
+        *errp = err;
+        return -1;
+    }
+
+    err = vfs_setcurdir( dir );
+
+	vfs_close( dir );
+
+	if( err ){
+        kfree(kern_buf);
+        *errp = err;
+        return -1;
+    }
+    kfree(kern_buf);
+    return 0;
 }
 
-
-int sys_getcwd(char *buff, size_t buff_len){
-  struct iovec iov;
-  struct uio kuio;
-  int err;
-
-    if (buff == NULL) {
-    return EFAULT; // Part or all of the address space pointed to by buf is invalid.
-  }
-
-  uio_kinit(&iov, &kuio, buff, buff_len-1, 0, UIO_READ); //offset = 0
-  kuio.uio_segflg = UIO_USERSPACE; //Set what kind of pointer we have (userspace or kernelspace)
-  kuio.uio_space = curproc->p_addrspace; //Address space for user pointer
-
-  err = vfs_getcwd(&kuio); // Get current directory, as a pathname.
-
-  if (err != 0){
-    return err;
-  }
-
-  buff[sizeof(buff)-1-kuio.uio_resid] = 0;
-
-  return 0;
+int 
+sys___getcwd(userptr_t buf_ptr, size_t buflen, int *errp){
+    int err;
+    struct uio buf;
+    struct iovec vec;
+    if(buf_ptr == NULL){
+        // *errp = EINVAL;
+        *errp = EFAULT;
+        return -1;
+    }
+    if(buflen == 0){
+        *errp = EINVAL;
+        return -1;
+    }
+    uio_kinit(
+        &vec,
+        &buf,
+        buf_ptr,
+        buflen,
+        0,
+        UIO_READ
+    );
+    buf.uio_space = proc_getas();
+    buf.uio_segflg = UIO_USERSPACE;
+    err = vfs_getcwd(&buf);
+    if(err){
+        *errp = err;
+        return -1;
+    }
+    return buflen - buf.uio_resid;
 }
+
 
 int
 std_open(int fileno){
