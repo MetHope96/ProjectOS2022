@@ -289,51 +289,28 @@ int sys_dup2(int oldfd, int newfd) {
 */
 int 
 sys_dup2(int oldfd, int newfd, int *retval){
-  struct file_handle *old_fh, *new_fh;
-  struct vnode *vn;
+  int err
 
   if(oldfd < 0 || newfd < 0 || oldfd >= OPEN_MAX || newfd >= OPEN_MAX){
-    *retval = EBADF;
-    return -1;
+    err = EBADF;
+    return err;
   }
 
-  if(oldfd == newfd)
-    return newfd;
+  if (newfd == oldfd){
+      *retval = newfd;
+      return 0;
+  }
+
+  if(curproc->file_table[newfd]; != NULL){
+    err = sys_close(newfd);
+    if(err)
+      return err;
+  }
+
+  curproc->p_filetable[newfd] = curproc->p_filetable[oldfd];
   
-  lock_acquire(curproc->lock);
-  old_fh = curproc->file_table[oldfd];
-  new_fh = curproc->file_table[newfd];
-
-  if(old_fh == NULL){
-    lock_release(curproc->lock);
-    *retval = EBADF;
-    return -1;
-  }
-
-  if(new_fh != NULL){
-    // close the file
-    curproc->file_table[newfd] = NULL;
-    lock_acquire(new_fh->lock);
-    vn = new_fh->vnode;
-    new_fh->vnode = NULL;
-    lock_release(new_fh->lock);
-    if (vn == NULL) {
-      lock_release(curproc->lock);
-      *retval= EIO;
-      return -1;
-    }
-      vfs_close(vn); 
-      lock_destroy(new_fh->lock);	
-    
-  }
-
-  curproc->file_table[newfd] = old_fh;
-  lock_release(curproc->lock);
-  lock_acquire(old_fh->lock);
-  VOP_INCREF(old_fh->vnode);
-
-  lock_release(old_fh->lock);
-  return newfd;
+  *retval = newfd;
+  return 0;
 }
 
 
