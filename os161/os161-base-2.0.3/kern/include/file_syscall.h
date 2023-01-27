@@ -18,7 +18,7 @@ int sys_write(int fd, userptr_t buff, size_t buff_len, int *retval);
 int sys_lseek(int fd, off_t pos, int whence, off_t *retval);
 int sys_close(int fd);
 int sys_dup2(int oldfd, int newfd);
-int sys_chdir(char *pathname);
-int sys_getcwd(char *buff, size_t buff_len);
+int sys_chdir(userptr_t path, int *errp);
+int sys___getcwd(userptr_t buf_ptr, size_t buflen, int *errp);
 
 #endif
