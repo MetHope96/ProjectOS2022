@@ -314,12 +314,12 @@ sys_dup2(int oldfd, int newfd, int *retval){
     // close the file
     curproc->file_table[newfd] = NULL;
     lock_acquire(new_fh->lock);
-    vn = new_fh->vn;
-    new_fh->vn = NULL;
+    vn = new_fh->vnode;
+    new_fh->vnode = NULL;
     lock_release(new_fh->lock);
     if (vn == NULL) {
       lock_release(curproc->lock);
-      *errp = EIO;
+      *retval= EIO;
       return -1;
     }
       vfs_close(vn); 
