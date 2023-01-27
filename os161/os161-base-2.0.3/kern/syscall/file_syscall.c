@@ -340,35 +340,27 @@ sys_chdir(userptr_t path, int *retval){
 
 // sys___getcwd
 int 
-sys___getcwd(userptr_t buf_ptr, size_t buflen, int *errp){
+sys___getcwd(userptr_t buf, size_t buf_len, int *retval){
     int err;
-    struct uio buf;
-    struct iovec vec;
-    if(buf_ptr == NULL){
-        // *errp = EINVAL;
-        *errp = EFAULT;
+    struct uio kuio;
+    struct iovec iov;
+    if(buf == NULL){
+        *retval = EFAULT;
         return -1;
     }
-    if(buflen == 0){
-        *errp = EINVAL;
+    if(buf_len == 0){
+        *retval = EINVAL;
         return -1;
     }
-    uio_kinit(
-        &vec,
-        &buf,
-        buf_ptr,
-        buflen,
-        0,
-        UIO_READ
-    );
-    buf.uio_space = proc_getas();
-    buf.uio_segflg = UIO_USERSPACE;
-    err = vfs_getcwd(&buf);
+    uio_kinit(&iov, &kuio, buf, buf_len, 0, UIO_READ );
+    kuio.uio_space = proc_getas();
+    kuio.uio_segflg = UIO_USERSPACE;
+    err = vfs_getcwd(&kuio);
     if(err){
-        *errp = err;
+        *retval = err;
         return -1;
     }
-    return buflen - buf.uio_resid;
+    return buf_len - kuio.uio_resid;
 }
 
 int
