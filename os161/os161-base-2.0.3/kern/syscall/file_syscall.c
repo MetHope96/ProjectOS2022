@@ -288,54 +288,53 @@ int sys_dup2(int oldfd, int newfd) {
 }
 
 int 
-sys_chdir(userptr_t path, int *errp){
-    //char kern_buf[PATH_MAX];
-    char* kern_buf;
-    int err;
-    struct vnode *dir;
+sys_chdir(userptr_t path, int *retval){
+    int err, len;
+    char* k_buf;
+    struct vnode *dir_vn;
     
     if(path == NULL){
-        *errp = EFAULT;
+        *retval = EFAULT;
         return -1;
     }
 
     if(path != NULL && strlen((char*)path) > PATH_MAX){
-        *errp = ENAMETOOLONG;
+        *retval = ENAMETOOLONG;
         return -1;
     }
     
-    int len = strlen((char*)path) + 1;
+    len = strlen((char*)path) + 1;
 
-    kern_buf = kmalloc(len * sizeof(char));
-    if(kern_buf == NULL){
-        *errp = ENOMEM;
+    k_buf = kmalloc(len * sizeof(char));
+    if(k_buf == NULL){
+        *retval = ENOMEM;
         return -1;
     }
 
-    err = copyinstr(path, kern_buf, len, NULL);
+    err = copyinstr(path, k_buf, len, NULL);
     if (err){
-        kfree(kern_buf);
-        *errp = err;
+        kfree(k_buf);
+        *retval = err;
         return -1;
     }
 
-    err = vfs_open( kern_buf, O_RDONLY, 0644, &dir );
+    err = vfs_open( k_buf, O_RDONLY, 0644, &dir_vn );
 	if( err ){
-        kfree(kern_buf);
-        *errp = err;
+        kfree(k_buf);
+        *retval = err;
         return -1;
     }
 
-    err = vfs_setcurdir( dir );
+    err = vfs_setcurdir( dir_vn );
 
-	vfs_close( dir );
+	vfs_close( dir_vn );
 
 	if( err ){
-        kfree(kern_buf);
-        *errp = err;
+        kfree(k_buf);
+        *retval = err;
         return -1;
     }
-    kfree(kern_buf);
+    kfree(k_buf);
     return 0;
 }
 
