@@ -270,28 +270,6 @@ int sys_lseek(int fd, off_t pos, int whence, off_t *retval){
 
 }
 
-/*
-int sys_dup2(int oldfd, int newfd) {
-  //Check if the oldfd and newfd is a valid parameters
-  if (oldfd >= OPEN_MAX || oldfd < 0 || newfd >= OPEN_MAX || newfd < 0){
-    return EBADF; //oldfd is not a valid file handle or new fd is a value that can not be a valid file handle
-  }
-  struct file_handle *fpointer;
-  fpointer = curproc->file_table[oldfd];
-  //Check if oldfd is already opened
-  if (curproc->file_table[oldfd] == NULL) {
-    return EBADF; //oldfd is not a valid file handle or new fd is a value that can not be a valid file handle
-  }
-
-  //If the newfd is "free" copy the oldfd into newfd
-  if (curproc->file_table[newfd] != NULL) {
-    // if newfd is "open" need to close first
-    sys_close(newfd);
-  }
-    curproc->file_table[newfd] = fpointer;
-  return 0;
-}
-*/
 int 
 sys_dup2(int oldfd, int newfd, int *retval){
   int err;
@@ -372,28 +350,41 @@ sys_chdir(userptr_t path, int *retval){
     return 0;
 }
 
-int 
-sys___getcwd(userptr_t buf, size_t buf_len, int *retval){
+int sys___getcwd(userptr_t buf, size_t buf_len, int *retval){
+
     int err;
     struct uio kuio;
     struct iovec iov;
+    
+
+    KASSERT(curthread != NULL);
+    KASSERT(curproc != NULL );
+
+    // - buf points to an invalid address.
     if(buf == NULL){
-        *retval = EFAULT;
-        return -1;
+        err = EFAULT;
+        return err;
     }
-    if(buf_len == 0){
-        *retval = EINVAL;
-        return -1;
-    }
-    uio_kinit(&iov, &kuio, buf, buf_len, 0, UIO_READ );
-    kuio.uio_space = proc_getas();
-    kuio.uio_segflg = UIO_USERSPACE;
+
+    // Setup the uio record (use a proper function to init all fields)
+	uio_kinit(&iov, &kuio, buf, buf_len, 0, UIO_READ);
+  kuio.uio_space = curproc->p_addrspace;
+	kuio.uio_segflg = UIO_USERSPACE; // for user space address
+
+    // Retrieve the uio struct associated with the current directory
+    // (containing vnode and string with pathname)
     err = vfs_getcwd(&kuio);
-    if(err){
-        *retval = err;
-        return -1;
+    if(err)
+        return err;
+
+    // Actual lenght of the current pathname directory is returned
+    *retval = buf_len - kuio.uio_resid;
+
+    if(*retval < 0){
+        err = EFAULT;
     }
-    return buf_len - kuio.uio_resid;
+
+    return 0;
 }
 
 int
