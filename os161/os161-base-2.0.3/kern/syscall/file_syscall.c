@@ -307,7 +307,7 @@ sys_dup2(int oldfd, int newfd, int *retval){
       return err;
   }
 
-  curproc->p_filetable[newfd] = curproc->p_filetable[oldfd];
+  curproc->file_table[newfd] = curproc->file_table[oldfd];
   
   *retval = newfd;
   return 0;
