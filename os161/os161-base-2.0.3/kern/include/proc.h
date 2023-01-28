@@ -41,7 +41,7 @@
 #include <file_syscall.h>
 #include <limits.h>
 
-#define MAX_PROC 8
+#define MAX_PROC 100
 
 struct addrspace;
 struct thread;
