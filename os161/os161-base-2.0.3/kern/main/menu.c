@@ -42,7 +42,9 @@
 #include <vfs.h>
 #include <sfs.h>
 #include <syscall.h>
+#include <proc_syscall.h>
 #include <test.h>
+#include <current.h>
 #include "opt-sfs.h"
 #include "opt-net.h"
 
@@ -79,16 +81,12 @@ cmd_progthread(void *ptr, unsigned long nargs)
 
 	KASSERT(nargs >= 1);
 
-	if (nargs > 2) {
-		kprintf("Warning: argument passing from menu not supported\n");
-	}
-
 	/* Hope we fit. */
 	KASSERT(strlen(args[0]) < sizeof(progname));
 
 	strcpy(progname, args[0]);
 
-	result = runprogram(progname);
+	result = runprogram(progname, (int) nargs, args);
 	if (result) {
 		kprintf("Running program %s failed: %s\n", args[0],
 			strerror(result));
@@ -139,6 +137,15 @@ common_prog(int nargs, char **args)
 	 * The new process will be destroyed when the program exits...
 	 * once you write the code for handling that.
 	 */
+	/*
+	int err = 0, status;
+	result = sys_waitpid(proc->proc_id, &status, 0, &err);
+	if(result < 0){
+		kprintf("waitpid failed: %s\n", strerror(err));
+		proc_destroy(proc);
+		return err;
+	}
+	*/
 
 	return 0;
 }

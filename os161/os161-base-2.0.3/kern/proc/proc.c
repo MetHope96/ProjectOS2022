@@ -83,6 +83,8 @@ proc_create(const char *name)
 
 	proc->p_numthreads = 0;
 	spinlock_init(&proc->p_lock);
+	proc->lock = lock_create("proc_lock");
+	proc->cv = cv_create("proc_cv");
 
 	/* VM fields */
 	proc->p_addrspace = NULL;
@@ -94,6 +96,9 @@ proc_create(const char *name)
 	for (int i = 0; i < OPEN_MAX; i++){
 		proc->file_table[i] = NULL;
 	}
+
+	proc->exit_status = false;
+	proc->exit_code = -1;
 
 	/*Defined the initial value */
 	if(strcmp(name,"[kernel]") == 0){
@@ -109,15 +114,13 @@ proc_create(const char *name)
 		while(proc_table[index_proc_table] != NULL){
 			index_proc_table++;
 		}
-		proc->proc_id = index_proc_table;
+		proc->proc_id = index_proc_table+1;
 		if(index_proc_table == 1){
 			proc->parent_id = 1;
 		}
 		proc_table[index_proc_table] = proc;
 		proc_counter++;
 	}
-	proc->exit_status = false;
-	proc->exit_code = -1;
 
 	return proc;
 }
@@ -204,11 +207,9 @@ proc_destroy(struct proc *proc)
 
 	KASSERT(proc->p_numthreads == 0);
 	spinlock_cleanup(&proc->p_lock);
-
-	kfree(proc->p_name);
-	kfree(proc);
-
-	/* file table destroy  */
+	lock_destroy(proc->lock);
+	cv_destroy(proc->cv);
+			/* file table destroy  */
 	for(int i = 0; i < OPEN_MAX; i++) {
 		if(proc->file_table[i] != NULL){
             lock_destroy(proc->file_table[i]->lock);
@@ -217,7 +218,10 @@ proc_destroy(struct proc *proc)
 			curproc->file_table[i] = NULL;
 		}
     }
-
+	proc_table[proc->proc_id-1] = NULL;
+	kfree(proc->p_name);
+	kfree(proc);
+	
 }
 
 /*
@@ -253,19 +257,7 @@ proc_create_runprogram(const char *name)
 	newproc->p_addrspace = NULL;
 
 	/* VFS fields */
-
-	/* Set the minPID = 2 and parent PID = 0*/
-	//newproc->proc_id = 2;
-	//newproc->parent_id = 1;
-	/*Inizalization of proc_table */
-	/*
-	for (int i=0; i<MAX_PROC;i++){
-		proc_table[i] = NULL;
-	}
-	*/
-
-	//proc_table[0] = newproc;
-	//proc_counter = 2;
+	
 	/*
 	 * Lock the current process to copy its current directory.
 	 * (We don't need to lock the new process, though, as we have

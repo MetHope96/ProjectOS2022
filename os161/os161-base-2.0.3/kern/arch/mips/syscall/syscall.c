@@ -115,7 +115,7 @@ syscall(struct trapframe *tf)
 
 	    /* Add stuff here */
 		case SYS_open:
-		err = sys_open((const char *)tf->tf_a0, (int)tf->tf_a1, &retval);
+		err = sys_open((userptr_t)tf->tf_a0, (int)tf->tf_a1, &retval);
 		break;
 
 	    case SYS_read:
@@ -148,17 +148,17 @@ syscall(struct trapframe *tf)
 		break;
 		}
 
-		case SYS_chdir:
-		err = sys_chdir((char*)tf->tf_a0);
-		break;
+		case SYS___getcwd:
+			err = sys___getcwd((userptr_t)tf->tf_a0, (size_t)tf->tf_a1, &retval);
+			break;
 
-	    case SYS___getcwd:
-		err = sys_getcwd((char *)tf->tf_a0, (size_t)tf->tf_a1);
-		break;
+		case SYS_chdir:
+			err = sys_chdir((userptr_t)tf->tf_a0, &retval);
+			break;
 
 	    case SYS_dup2:
-		err = sys_dup2((int)tf->tf_a0, (int)tf->tf_a1);
-		break;
+			err = sys_dup2((int)tf->tf_a0, (int)tf->tf_a1, &retval);
+			break;
 
 		case SYS_fork:
 		err = sys_fork((pid_t *)&retval, tf);
@@ -173,14 +173,14 @@ syscall(struct trapframe *tf)
 		err = 0;
 		break;
 
+		case SYS_waitpid:
+		err = sys_waitpid((pid_t)tf->tf_a0, (int *)tf->tf_a1, (int)tf->tf_a2,(pid_t *)&retval);
+		break;
 
-		//case SYS_waitpid:
-		//err = sys_waitpid((pid_t)tf->tf_a0, (int *)tf->tf_a1, (int)tf->tf_a2, &retval );
-		//break;
-/*
 		case SYS_execv:
-		err = SYS__execv((char *)tf->tf_a0, (char **)tf->tf_a1);
-		*/
+		err = sys_execv((const char *)tf->tf_a0,  (char **)tf->tf_a1);
+		break;
+
 	    default:
 		kprintf("Unknown syscall %d\n", callno);
 		err = ENOSYS;
@@ -230,11 +230,12 @@ enter_forked_process(struct trapframe *tf)
 {
 	struct trapframe tf_child = *tf;
 
-	as_activate();
+	
 	//kfree(tf);
 	tf_child.tf_v0 = 0;
 	tf_child.tf_a3 = 0;
 	tf_child.tf_epc += 4;
 
+	as_activate();
 	mips_usermode(&tf_child);
 }

@@ -41,7 +41,7 @@
 #include <file_syscall.h>
 #include <limits.h>
 
-#define MAX_PROC 8
+#define MAX_PROC 10
 
 struct addrspace;
 struct thread;
@@ -82,7 +82,8 @@ struct proc {
 	bool exit_status;
 	int exit_code;
 	struct lock *lock;
-	char p_cwdpath[PATH_MAX+1];
+	struct cv *cv;
+	
 };
 
 

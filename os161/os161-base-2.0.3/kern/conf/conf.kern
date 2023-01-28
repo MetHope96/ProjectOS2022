@@ -382,7 +382,6 @@ file      syscall/time_syscalls.c
 file      syscall/file_syscall.c
 file      syscall/proc_syscall.c
 
-
 #
 # Startup and initialization
 #
@@ -443,5 +442,4 @@ file		test/synchtest.c
 file		test/semunit.c
 file		test/kmalloctest.c
 file		test/fstest.c
-file		test/opentest.c
 optfile net	test/nettest.c
