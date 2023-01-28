@@ -110,7 +110,6 @@ void sys_exit(int exitcode){
 	for(i = 0; i < MAX_PROC; i++){
 		if(proc_table[i] != NULL){
 			if(proc_table[i]->proc_id == curproc->proc_id){
-			proc_destroy(proc_table[i]);
 			break;
 			}
 		}
