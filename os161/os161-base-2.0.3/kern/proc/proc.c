@@ -320,6 +320,9 @@ proc_remthread(struct thread *t)
 	spinlock_acquire(&proc->p_lock);
 	KASSERT(proc->p_numthreads > 0);
 	proc->p_numthreads--;
+	if(proc->p_numthreads == 0 && strcmp(proc->p_name,"[kernel]") != 0){
+		proc_destroy(proc);
+	}
 	spinlock_release(&proc->p_lock);
 
 	spl = splhigh();
