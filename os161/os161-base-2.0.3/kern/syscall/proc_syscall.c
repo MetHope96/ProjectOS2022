@@ -139,12 +139,12 @@ int sys_waitpid(pid_t pid, int *status, int options, pid_t* retval) {
 		return ECHILD;
 	}
 	
-	for(i = 0; i < OPEN_MAX; i++){
+	for(i = 0; i < MAX_PROC; i++){
 		if(proc_table[i] != NULL){
 			if(proc_table[i]->proc_id == pid)
 			break;
 		}
-		if(i == OPEN_MAX - 1)
+		if(i == MAX_PROC - 1)
 		return ESRCH;
 	}
 
@@ -183,7 +183,6 @@ int sys_waitpid(pid_t pid, int *status, int options, pid_t* retval) {
 	*retval = proc_table[i]->proc_id;
 
 	proc_destroy(proc_table[i]);
-	proc_table[i] = NULL;
 
 	return 0;
 }

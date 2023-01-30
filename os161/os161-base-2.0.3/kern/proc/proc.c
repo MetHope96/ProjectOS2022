@@ -219,6 +219,15 @@ proc_destroy(struct proc *proc)
 		}
     }
 
+	for(int i = 0; i < MAX_PROC; i++){
+		if(proc_table[i] != NULL){
+			if(proc_table[i]->proc_id == pid){
+				proc_table[i] = NULL;
+				break;
+			}
+		}
+	}
+
 	kfree(proc->p_name);
 	kfree(proc);
 	
