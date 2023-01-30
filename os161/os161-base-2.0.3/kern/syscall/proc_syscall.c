@@ -53,8 +53,6 @@ int sys_fork(pid_t *child_pid, struct trapframe *tf){
       return ENPROC; //There are already too many process on the system
     }
 
-  proc_table[proc_counter] = child_proc;
-
   /*Copy the address space of the parent in a child process */
   err = as_copy(curproc->p_addrspace, &child_proc->p_addrspace);
 
@@ -118,12 +116,14 @@ void sys_exit(int exitcode){
 	}
 
 
- 	spinlock_acquire(&curproc->p_lock);
+ 	lock_acquire(curproc->lock);
 	curproc->exit_status = 1;
 	curproc->exit_code = _MKWAIT_EXIT(exitcode);
-	spinlock_release(&curproc->p_lock);
 	KASSERT(curproc->exit_status == proc_table[i]->exit_status);
 	KASSERT(curproc->exit_code == proc_table[i]->exit_code);
+	cv_signal(curproc->cv, curproc->lock);
+	lock_release(curproc->lock);
+
 
 	thread_exit();
 }
@@ -161,14 +161,12 @@ int sys_waitpid(pid_t pid, int *status, int options, pid_t* retval) {
 			if(err){
 				lock_release(proc_table[i]->lock);
 				proc_destroy(proc_table[i]);
-				proc_table[i] = NULL;
 				return err;
 			}
 		}
 		lock_release(proc_table[i]->lock);
 		*retval = proc_table[i]->proc_id;
 		proc_destroy(proc_table[i]);
-		proc_table[i] = NULL;
 		return 0;
 	}
 
@@ -178,7 +176,6 @@ int sys_waitpid(pid_t pid, int *status, int options, pid_t* retval) {
 		if(err){
 			lock_release(proc_table[i]->lock);
 			proc_destroy(proc_table[i]);
-			proc_table[i] = NULL;
 			return err;
 		}
 	}
@@ -186,7 +183,6 @@ int sys_waitpid(pid_t pid, int *status, int options, pid_t* retval) {
 	*retval = proc_table[i]->proc_id;
 
 	proc_destroy(proc_table[i]);
-	proc_table[i] = NULL;
 
 	return 0;
 }
