@@ -219,16 +219,6 @@ proc_destroy(struct proc *proc)
 		}
     }
 
-	//Find index proc_table
-		for(int i = 0; i < OPEN_MAX; i++){
-		if(proc_table[i] != NULL){
-			if(proc_table[i]->proc_id == pid)
-			break;
-		}
-		if(i == OPEN_MAX - 1)
-		return ESRCH;
-	}
-	proc_table[i] = NULL;
 	kfree(proc->p_name);
 	kfree(proc);
 	
