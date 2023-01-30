@@ -422,7 +422,7 @@ std_open(int fileno){
   }
 
     curproc->file_table[i] = (struct file_handle *)kmalloc(sizeof(struct file_handle));
-    err = vfs_open(file_name, flags, 0664, &curproc->file_table[i]->vnode);
+    err = vfs_open(file_name, flags, 0, &curproc->file_table[i]->vnode);
 
     if (err){
       kfree(curproc->file_table[i]);
