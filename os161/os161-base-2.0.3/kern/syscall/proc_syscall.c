@@ -39,7 +39,7 @@ int sys_fork(pid_t *child_pid, struct trapframe *tf){
     return ENPROC; //There are too many process on the system.
   }
   name = curproc->p_name;
-  child_proc = proc_create_runprogram(name);
+  child_proc = proc_create(name);
 
   if(child_proc == NULL){
     return ENOMEM; //Sufficient virtual memory for the new process was not available.
