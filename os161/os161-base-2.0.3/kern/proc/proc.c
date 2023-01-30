@@ -230,6 +230,7 @@ proc_destroy(struct proc *proc)
 
 	kfree(proc->p_name);
 	kfree(proc);
+	proc_counter --;
 	
 }
 

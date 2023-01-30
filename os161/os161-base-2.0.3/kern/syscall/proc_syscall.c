@@ -33,13 +33,11 @@ int sys_fork(pid_t *child_pid, struct trapframe *tf){
   struct trapframe *tf_child; //Stack of the exception handled
   struct proc *child_proc;
   int err;
-  char *name;
 
   if (proc_counter >= PID_MAX){
     return ENPROC; //There are too many process on the system.
   }
-  name = curproc->p_name;
-  child_proc = proc_create(name);
+  child_proc = proc_create("child_proc");
 
   if(child_proc == NULL){
     return ENOMEM; //Sufficient virtual memory for the new process was not available.
@@ -70,12 +68,7 @@ int sys_fork(pid_t *child_pid, struct trapframe *tf){
     }
   }
 
-  spinlock_acquire(&curproc->p_lock);
-      if (curproc->p_cwd != NULL) {
-            VOP_INCREF(curproc->p_cwd);
-            child_proc->p_cwd = curproc->p_cwd;
-      }
-  spinlock_release(&curproc->p_lock);
+	child_proc->p_cwd = curproc->p_cwd;
 
   /*Creation of memory space of trapframe */
   tf_child = (struct trapframe *)kmalloc(sizeof(struct trapframe));
