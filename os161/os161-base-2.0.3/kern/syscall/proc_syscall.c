@@ -148,10 +148,9 @@ int sys_waitpid(pid_t pid, int *status, int options, pid_t* retval) {
 		return ESRCH;
 	}
 
-	if(proc_table[i]->proc_id != 1){
 	if(proc_table[i]->parent_id != curproc->proc_id){
 		return ECHILD;
-	}}
+	}
 	
 	KASSERT(proc_table[i] != NULL);
 	lock_acquire(proc_table[i]->lock);
