@@ -45,8 +45,6 @@ int sys_fork(pid_t *child_pid, struct trapframe *tf){
     return ENOMEM; //Sufficient virtual memory for the new process was not available.
   }
 
-
-
   /* Search the first free space in proc_table */
 
     if(proc_counter == MAX_PROC -1){
