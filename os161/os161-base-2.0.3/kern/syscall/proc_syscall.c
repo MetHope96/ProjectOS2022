@@ -31,13 +31,13 @@ static void op_efp(void *tfv, unsigned long data2){
 int sys_fork(pid_t *child_pid, struct trapframe *tf){
 
   struct trapframe *tf_child; //Stack of the exception handled
-  struct proc *child_proc;
+  struct proc *child_proc = NULL;
   int err;
 
   if (proc_counter >= PID_MAX){
     return ENPROC; //There are too many process on the system.
   }
-  child_proc = proc_create("child_proc");
+  child_proc = proc_create_runprogram("child_proc");
 
   if(child_proc == NULL){
     return ENOMEM; //Sufficient virtual memory for the new process was not available.
@@ -67,8 +67,6 @@ int sys_fork(pid_t *child_pid, struct trapframe *tf){
       lock_release(curproc->file_table[i]->lock);//Release the lock at filetable[i]
     }
   }
-
-	child_proc->p_cwd = curproc->p_cwd;
 
   /*Creation of memory space of trapframe */
   tf_child = (struct trapframe *)kmalloc(sizeof(struct trapframe));
