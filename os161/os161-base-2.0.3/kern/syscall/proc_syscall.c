@@ -183,6 +183,7 @@ int sys_waitpid(pid_t pid, int *status, int options, pid_t* retval) {
 	*retval = proc_table[i]->proc_id;
 
 	proc_destroy(proc_table[i]);
+	proc_table[i] = NULL;
 
 	return 0;
 }
