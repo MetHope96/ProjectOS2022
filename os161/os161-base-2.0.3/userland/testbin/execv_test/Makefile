@@ -1,10 +1,11 @@
-# Makefile for test_file_rw
+# Makefile for argtest
 
 TOP=../../..
 .include "$(TOP)/mk/os161.config.mk"
 
-PROG=test_file_rw
-SRCS=test_file_rw.c
+PROG=execv_test
+SRCS=execv_test.c
 BINDIR=/testbin
 
 .include "$(TOP)/mk/os161.prog.mk"
+
