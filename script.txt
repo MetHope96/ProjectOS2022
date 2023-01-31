@@ -1,0 +1,33 @@
+cd os161
+rm ProjectOS2022 -r -f
+git clone --branch process_syscall_2023_ant https://github.com/MetHope96/ProjectOS2022.git
+cd ProjectOS2022
+cd os161/os161-base-2.0.3/mk
+chmod 777 fixdepends.sh
+chmod 777 installheaders.sh
+cd ..
+bmake depend
+bmake
+cd kern/conf/
+cp DUMBVM SHELL
+chmod 777 ./config
+chmod 777 newvers.sh
+./config SHELL
+cd ../compile/SHELL
+bmake depend
+bmake
+sleep 2
+bmake install
+cd ../../../../../..
+cd root
+sys161 kernel-SHELL
+
+
+
+
+
+
+/* Per installare git */
+sudo apt-get update
+sudo dpkg --configure -a
+sudo apt-get install git
