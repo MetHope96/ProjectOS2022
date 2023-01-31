@@ -13,7 +13,7 @@ int main() {
     pid= fork ();
     if (pid ==0)
     {
-        printf("I am child, with the PID:%d and my parent ID is : %d\n", getpid());
+        printf("I am child, with the PID:%d\n", getpid());
      }
     else if (pid < 0)
     {
