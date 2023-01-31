@@ -27,7 +27,7 @@ int main(void){
         _exit(0);
     
     }else{ // Parent
-        sleep(2);
+        _sleep(2);
         pid2 = getpid();
         printf("This the parent process with pid = %d that is waiting for its child with pid = %d\n",pid2,pid);
         printf("The child process is exited with exit status %d\n", status);
