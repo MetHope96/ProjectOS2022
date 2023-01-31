@@ -4,30 +4,28 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <sys/types.h>
-#include <string.h>
-#include <time.h> 
-#include <sys/wait.h>
-#include <errno.h>
 
-int main(void){
-	
-    pid_t pid, pid1, pid2;
-
-    printf("Execution of fork\n");
-    
-    pid = fork();
-    if(pid < 0){ 
-        printf("Error fork: %s\n",strerror(errno)); 
-        return 1;
-    }else if(pid == 0){ // Child
-        pid1 = getpid();
-        printf("This is the child process with pid = %d\n",pid1);
-        _exit(0);
-    
-    }else{ // Parent
-        pid2 = getpid();
-        printf("This the parent process with pid = %d that is waiting for its child with pid = %d\n",pid2,pid);
-        return 0;
+int main ()
+{    pid_t pid;
+    int i;
+    for (i=0; i < 3; i++)
+    {
+        pid= fork();      
+        if(pid <0)
+        {
+            printf ("Error!\n");        
+        }
+        else if (pid == 0 )
+        {
+           printf ("I am the child with PID %d, I terminate here!\n", getpid());
+            _exit (0);
+        }
+        else 
+        {
+            printf ("I am the father with PID %d, my child PID is %d\n", getpid(), pid); 
+        }
     }
+	return 0;
 }
