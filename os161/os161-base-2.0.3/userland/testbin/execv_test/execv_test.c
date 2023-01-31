@@ -14,12 +14,13 @@
 #define SUBARGC_MAX 64
 static char *subargv[SUBARGC_MAX];
 
-int main(int argc, char **argv){
+int main(){
+		
 	
-    static char default_prog[] = "/bin/pwd";
+    static char default_prog[] = "/testbin/helloworld";
     subargv[0] = default_prog;
 
-    int rval, status;;
+    int rval;
         
         rval = execv(subargv[0], subargv);
         if (rval == -1){
