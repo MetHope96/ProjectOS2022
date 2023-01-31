@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <string.h>
+#include <time.h> 
 #include <sys/wait.h>
 #include <errno.h>
 
@@ -26,8 +27,8 @@ int main(void){
         _exit(0);
     
     }else{ // Parent
+        sleep(2);
         pid2 = getpid();
-        waitpid(pid, &status, 0);
         printf("This the parent process with pid = %d that is waiting for its child with pid = %d\n",pid2,pid);
         printf("The child process is exited with exit status %d\n", status);
         return 0;
