@@ -7,24 +7,31 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
-int main() {
-   
+int main ()
+{
+
     pid_t pid;
-    pid= fork ();
-    if (pid ==0)
+    int i;
+
+    for (i=0; i < 3; i++)
     {
-        printf("I am child, with the PID:%d\n", getpid());
-     }
-    else if (pid < 0)
-    {
-        printf("Child is not successful!\n");
+        
+        pid = fork();
+        
+        if(pid <0)
+        {
+            printf ("Error!\n");        
+        }
+        else if (pid > 0 )
+        {
+           printf ("%d\n", getpid());
+        }
+        else 
+        {
+            printf ("%d\n", getpid()); 
+        }
     }
-    else {
-        printf("I am parent, with the PID:%d and my child ID is: %d\n", getpid(), pid);
-    }
 
 
-
-   printf("Done!\n");
-   return 0;
+    return 0;
 }
