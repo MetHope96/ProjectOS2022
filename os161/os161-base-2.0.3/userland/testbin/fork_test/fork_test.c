@@ -13,7 +13,6 @@
 int main(void){
 	
     pid_t pid, pid1, pid2;
-    int status;
 
     printf("Execution of fork\n");
     
@@ -27,10 +26,8 @@ int main(void){
         _exit(0);
     
     }else{ // Parent
-        _sleep(2);
         pid2 = getpid();
         printf("This the parent process with pid = %d that is waiting for its child with pid = %d\n",pid2,pid);
-        printf("The child process is exited with exit status %d\n", status);
         return 0;
     }
 }
