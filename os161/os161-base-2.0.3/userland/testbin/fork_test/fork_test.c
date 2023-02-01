@@ -10,28 +10,53 @@
 int main ()
 {
 
-    pid_t pid;
+    pid_t pid1, pid2, pid3;
     int i;
 
-    for (i=0; i < 3; i++)
-    {
         
-        pid = fork();
+        pid1 = fork();
         
-        if(pid <0)
+        if(pid1 <0)
         {
             printf ("Error!\n");        
         }
-        else if (pid > 0 )
+        else if (pid1 == 0 )
         {
            printf ("%d\n", getpid());
+           _exit(0);
         }
         else 
         {
-            printf ("%d\n", getpid()); 
-        }
-    }
+            pid2 = fork();
+            if(pid2 <0)
+            {
+                printf ("Error!\n");        
+            }
+            else if (pid2 == 0 )
+            {
+            printf ("%d\n", getpid());
+             _exit(0);
+            }
+            else{
+                pid3 = fork();
+                if(pid3 <0)
+                {
+                printf ("Error!\n");        
+                }
+                else if (pid3 == 0 )
+                {
+                printf ("%d\n", getpid());
+                _exit(0);
+                }
+                else{
+                printf ("%d\n", getpid());
+                while (1);
+                  
+                }
 
+            
+            }
+        }
 
     return 0;
 }
