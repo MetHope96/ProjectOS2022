@@ -15,7 +15,6 @@
 #include <vm.h>
 #include <lib.h>
 
-struct lock *arg_lock;
 
 int sys_getpid(pid_t *curproc_pid) {
 	*curproc_pid = curproc->proc_id;

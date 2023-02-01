@@ -12,7 +12,7 @@
 int main(void){
 	
     pid_t pid, pid1, pid2;
-    int status;
+    int status = 0;
 
     printf("Execution of fork\n");
     
