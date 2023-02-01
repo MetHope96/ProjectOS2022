@@ -207,26 +207,6 @@ proc_destroy(struct proc *proc)
 
 	KASSERT(proc->p_numthreads == 0);
 	spinlock_cleanup(&proc->p_lock);
-	lock_destroy(proc->lock);
-	cv_destroy(proc->cv);
-			/* file table destroy  */
-	for(int i = 0; i < OPEN_MAX; i++) {
-		if(proc->file_table[i] != NULL){
-            lock_destroy(proc->file_table[i]->lock);
-            vfs_close(proc->file_table[i]->vnode);
-            kfree(proc->file_table[i]);
-			curproc->file_table[i] = NULL;
-		}
-    }
-
-	for(int i = 0; i < MAX_PROC; i++){
-		if(proc_table[i] != NULL){
-			if(proc_table[i]->proc_id == proc->proc_id){
-				proc_table[i] = NULL;
-				break;
-			}
-		}
-	}
 
 	kfree(proc->p_name);
 	kfree(proc);
