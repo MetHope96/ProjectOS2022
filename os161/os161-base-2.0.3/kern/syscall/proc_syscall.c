@@ -108,7 +108,7 @@ void sys_exit(int exitcode){
 
  	lock_acquire(curproc->lock);
 	curproc->exit_status = 1;
-	curproc->exit_code = _MKWAIT_EXIT(exitcode);
+	curproc->exit_code = exitcode;
 	KASSERT(curproc->exit_status == proc_table[i]->exit_status);
 	KASSERT(curproc->exit_code == proc_table[i]->exit_code);
 	cv_signal(curproc->cv, curproc->lock);
@@ -149,6 +149,8 @@ int sys_waitpid(pid_t pid, int *status, int options, pid_t* retval) {
 
 	lock_release(proc_table[i]->lock);
 	*retval = proc_table[i]->proc_id;
+
+  *status = proc_table[i]->exitcode;
 
 	proc_destroy(proc_table[i]);
 
