@@ -58,6 +58,16 @@ int sys_fork(pid_t *child_pid, struct trapframe *tf){
 
   child_proc->parent_id = curproc->proc_id;
 
+  /*Creation of memory space of trapframe */
+  tf_child = (struct trapframe *)kmalloc(sizeof(struct trapframe));
+  if(tf_child == NULL){
+    return ENOMEM; //Sufficient virtual memory for the new process was not available.
+  }
+
+  /* Copy the trapframe into trapframe_child */
+  *tf_child = *tf;
+  //memcpy(tf_child, tf, sizeof(struct trapframe));
+
   /*Since the parent and child have the same file table: */
 
   for(int i = 0; i < OPEN_MAX; i++){
@@ -69,15 +79,6 @@ int sys_fork(pid_t *child_pid, struct trapframe *tf){
     }
   }
 
-  /*Creation of memory space of trapframe */
-  tf_child = (struct trapframe *)kmalloc(sizeof(struct trapframe));
-  if(tf_child == NULL){
-    return ENOMEM; //Sufficient virtual memory for the new process was not available.
-  }
-
-  /* Copy the trapframe into trapframe_child */
-  //*tf_child = *tf;
-  memcpy(tf_child, tf, sizeof(struct trapframe));
 
   err = thread_fork(curthread->t_name, child_proc,op_efp,(void *)tf_child, (unsigned long)0);
   /*If thread_fork fails: destroy the process and free the trapframe memory*/
