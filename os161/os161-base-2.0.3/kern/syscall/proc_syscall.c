@@ -63,6 +63,7 @@ int sys_fork(pid_t *child_pid, struct trapframe *tf){
   for(int i = 0; i < OPEN_MAX; i++){
     if(curproc->file_table[i] != NULL){
       lock_acquire(curproc->file_table[i]->lock);//Lock the filetablei[i]
+      curproc->file_table[i]->ref_count++;   
       child_proc->file_table[i] = curproc->file_table[i];
       lock_release(curproc->file_table[i]->lock);//Release the lock at filetable[i]
     }
