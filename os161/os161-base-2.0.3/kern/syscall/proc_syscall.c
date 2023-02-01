@@ -144,31 +144,9 @@ int sys_waitpid(pid_t pid, int *status, int options, pid_t* retval) {
 	
 	KASSERT(proc_table[i] != NULL);
 	lock_acquire(proc_table[i]->lock);
-	if(proc_table[i]->exit_status){
-		if(status != NULL) {
-			err = copyout(&proc_table[i]->exit_code, (userptr_t)status, sizeof(proc_table[i]->exit_code));
-			if(err){
-				lock_release(proc_table[i]->lock);
-				proc_destroy(proc_table[i]);
-				return err;
-			}
-		}
-		lock_release(proc_table[i]->lock);
-		*retval = proc_table[i]->proc_id;
-		proc_destroy(proc_table[i]);
-		proc_table[i] = NULL;
-		return 0;
-	}
 
 	cv_wait(proc_table[i]->cv, proc_table[i]->lock);
-	if(status != NULL) {
-		err = copyout(&proc_table[i]->exit_code, (userptr_t)status, sizeof(proc_table[i]->exit_code));
-		if(err){
-			lock_release(proc_table[i]->lock);
-			proc_destroy(proc_table[i]);
-			return err;
-		}
-	}
+
 	lock_release(proc_table[i]->lock);
 	*retval = proc_table[i]->proc_id;
 
