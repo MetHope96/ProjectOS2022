@@ -121,7 +121,6 @@ void sys_exit(int exitcode){
 int sys_waitpid(pid_t pid, int *status, int options, pid_t* retval) {
 
 	int i = 0;
-	int err = 0;
 	if(options != 0){
 		return EINVAL;
 	}
@@ -150,7 +149,7 @@ int sys_waitpid(pid_t pid, int *status, int options, pid_t* retval) {
 	lock_release(proc_table[i]->lock);
 	*retval = proc_table[i]->proc_id;
 
-  *status = proc_table[i]->exitcode;
+  *status = proc_table[i]->exit_code;
 
 	proc_destroy(proc_table[i]);
 
