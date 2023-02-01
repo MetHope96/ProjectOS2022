@@ -431,7 +431,7 @@ std_open(int fileno){
     }
 
     lock_acquire(curproc->lock);
-
+    curproc->file_table[i]->ref_count = 1;
     curproc->file_table[i]->offset = 0;
     curproc->file_table[i]->flags = flags;
     curproc->file_table[i]->lock = lock_create("lock_fh"); //Create a lock for a file_handle
