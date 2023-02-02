@@ -156,7 +156,7 @@ int sys_waitpid(pid_t pid, int *status, int options, pid_t* retval) {
 		}
 		lock_release(proc_table[i]->lock);
 		*retval = proc_table[i]->proc_id;
-		proc_destroy(proc_table[i]);
+		//proc_destroy(proc_table[i]);
 		proc_table[i] = NULL;
 		return 0;
 	}
