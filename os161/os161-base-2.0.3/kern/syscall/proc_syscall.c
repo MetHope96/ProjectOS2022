@@ -102,7 +102,6 @@ void sys_exit(int exitcode){
 	KASSERT(curproc->exit_status == proc_table[i]->exit_status);
 	KASSERT(curproc->exit_code == proc_table[i]->exit_code);
 	cv_signal(curproc->cv, curproc->lock);
-  proc_table[i] = NULL;
 	lock_release(curproc->lock);
 
 
