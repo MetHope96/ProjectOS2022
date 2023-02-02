@@ -93,7 +93,7 @@ proc_create(const char *name)
 	proc->p_cwd = NULL;
 
 	/* Initialization of the file table*/
-	for (int i = 0; i < OPEN_MAX; i++){
+	for (int i = 3; i < OPEN_MAX; i++){
 		proc->file_table[i] = NULL;
 	}
 
