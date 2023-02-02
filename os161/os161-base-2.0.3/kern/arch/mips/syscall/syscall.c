@@ -226,16 +226,24 @@ syscall(struct trapframe *tf)
  * Thus, you can trash it and do things another way if you prefer.
  */
 void
-enter_forked_process(struct trapframe *tf)
+enter_forked_process(struct trapframe *tf, unsigned long addrspace)
 {
-	struct trapframe tf_child = *tf;
+	// Copy trapframe inside kernel stack
+	struct trapframe childtf = *tf;
 
-	
-	//kfree(tf);
-	tf_child.tf_v0 = 0;
-	tf_child.tf_a3 = 0;
-	tf_child.tf_epc += 4;
+	struct proc *p = curproc;
 
+
+	(void)addrspace; // not used argument
+
+	// Activate the address space
 	as_activate();
-	mips_usermode(&tf_child);
+
+	(void)p;
+
+	childtf.tf_v0 = 0;		// retval of the child process
+	childtf.tf_a3 = 0;		// no error
+	childtf.tf_epc += 4;	//child process begins by the next instruction
+
+	mips_usermode(&childtf);
 }

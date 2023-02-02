@@ -89,7 +89,7 @@ struct proc {
 
 
 /* Create a proc structure. */
-//struct proc *proc_create(const char *name);
+struct proc *proc_create(const char *name);
 
 /* This is the process structure for the kernel and for kernel-only threads. */
 extern struct proc *kproc;
