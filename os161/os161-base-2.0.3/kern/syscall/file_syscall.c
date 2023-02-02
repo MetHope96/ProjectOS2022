@@ -388,7 +388,7 @@ int sys___getcwd(userptr_t buf, size_t buf_len, int *retval){
 
 int
 std_open(int fileno){
-  int fd, i = 0;
+  int fd;
   int err, flags;
   const char* filename = "con:";
 
@@ -414,31 +414,24 @@ std_open(int fileno){
       break;
   }
 
-  while (curproc->file_table[i] != NULL){
-    if (i == OPEN_MAX-1){
-      return EMFILE; //The process's file table was full, or a process-specific limit on open files was reached.
-    }
-      i++;
-  }
-
-    curproc->file_table[i] = (struct file_handle *)kmalloc(sizeof(struct file_handle));
-    err = vfs_open(file_name, flags, 0, &curproc->file_table[i]->vnode);
+    curproc->file_table[fd] = (struct file_handle *)kmalloc(sizeof(struct file_handle));
+    err = vfs_open(file_name, flags, 0, &curproc->file_table[fd]->vnode);
 
     if (err){
-      kfree(curproc->file_table[i]);
-      curproc->file_table[i]=NULL;
+      kfree(curproc->file_table[fd]);
+      curproc->file_table[fd]=NULL;
       return err;
     }
 
     lock_acquire(curproc->lock);
-    curproc->file_table[i]->ref_count = 1;
-    curproc->file_table[i]->offset = 0;
-    curproc->file_table[i]->flags = flags;
-    curproc->file_table[i]->lock = lock_create("lock_fh"); //Create a lock for a file_handle
-    if(curproc->file_table[i]->lock == NULL) {
-      vfs_close(curproc->file_table[i]->vnode);
-    	kfree(curproc->file_table[i]);
-    	curproc->file_table[i] = NULL;
+    curproc->file_table[fd]->ref_count = 1;
+    curproc->file_table[fd]->offset = 0;
+    curproc->file_table[fd]->flags = flags;
+    curproc->file_table[fd]->lock = lock_create("lock_fh"); //Create a lock for a file_handle
+    if(curproc->file_table[fd]->lock == NULL) {
+      vfs_close(curproc->file_table[fd]->vnode);
+    	kfree(curproc->file_table[fd]);
+    	curproc->file_table[fd] = NULL;
     }
     lock_release(curproc->lock);
 
