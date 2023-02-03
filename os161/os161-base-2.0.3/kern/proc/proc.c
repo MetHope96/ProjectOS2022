@@ -54,6 +54,7 @@
 #include <synch.h>
 #include <kern/unistd.h>
 #include <limits.h>
+#include <file_syscall.h>
 
 /*
  * The process for the kernel; this holds all the kernel-only threads.
