@@ -113,8 +113,15 @@ int sys_open(userptr_t filename, int flags, int *retfd){
 
 int sys_write(int fd, userptr_t buff, size_t buff_len, int *retval){
   int err;
-  lock_acquire(curproc->lock);
-  lock_acquire(curproc->file_table[fd]->lock);
+  struct file_handle *fh;
+  struct proc *p = curproc;
+
+    KASSERT(curthread != NULL);
+    KASSERT(curproc != NULL );
+
+  fh = p->file_table[fd];
+
+  lock_acquire(fh->lock);
 
   if (fd < 0 || fd >= OPEN_MAX){
     return EBADF; //Fd is not a valid file descriptor
@@ -129,29 +136,35 @@ int sys_write(int fd, userptr_t buff, size_t buff_len, int *retval){
   struct iovec iov;
   struct uio kuio;
 
-  uio_kinit(&iov, &kuio, buff, buff_len, curproc->file_table[fd]->offset, UIO_WRITE);
-  kuio.uio_space = curproc->p_addrspace;
+  uio_kinit(&iov, &kuio, buff, buff_len, fh->offset, UIO_WRITE);
+  kuio.uio_space = p->p_addrspace;
   kuio.uio_segflg = UIO_USERSPACE; // for user space address 
 
-  err = VOP_WRITE (curproc->file_table[fd]->vnode, &kuio);
+  err = VOP_WRITE (fh->vnode, &kuio);
   if (err){
     return err;
   }
 
   *retval = buff_len - kuio.uio_resid; //calculate the amount of bytes written. 0 in case of success.
 
-  curproc->file_table[fd]->offset = kuio.uio_offset;
-  lock_release(curproc->file_table[fd]->lock);
-  lock_release(curproc->lock);
+  fh->offset = kuio.uio_offset;
+  lock_release(fh->lock);
   return 0;
 }
 
 int sys_read(int fd, userptr_t buff, size_t buff_len, int *retval){
   int err;
-  lock_acquire (curproc->lock);
-  lock_acquire (curproc->file_table[fd]->lock);
+  struct file_handle *fh;
+  struct proc *p = curproc;
 
-  if (fd < 0 || fd >= OPEN_MAX || curproc->file_table[fd] == NULL){
+    KASSERT(curthread != NULL);
+    KASSERT(curproc != NULL );
+
+  fh = p->file_table[fd];
+
+  lock_acquire (fh->lock);
+
+  if (fd < 0 || fd >= OPEN_MAX || fh == NULL){
     return EBADF; // Fd is not a valid file descriptor
   }
 
@@ -162,21 +175,20 @@ int sys_read(int fd, userptr_t buff, size_t buff_len, int *retval){
   struct iovec iov;
   struct uio kuio;
 
-  uio_kinit(&iov, &kuio, buff, buff_len, curproc->file_table[fd]->offset, UIO_READ);
-  kuio.uio_space = curproc->p_addrspace;
+  uio_kinit(&iov, &kuio, buff, buff_len, fh->offset, UIO_READ);
+  kuio.uio_space = p->p_addrspace;
   kuio.uio_segflg = UIO_USERSPACE; // for user space address 
 
-  err = VOP_READ(curproc->file_table[fd]->vnode, &kuio);
+  err = VOP_READ(fh->vnode, &kuio);
   if (err){
-	 lock_release(curproc->file_table[fd]->lock);
+	 lock_release(fh->lock);
 	 return err;
   }
 
   *retval = buff_len - kuio.uio_resid; //calculate the amount of bytes written. 0 in case of success.
 
-  curproc->file_table[fd]->offset = kuio.uio_offset;
-  lock_release(curproc->file_table[fd]->lock);
-  lock_release(curproc->lock);
+  fh->offset = kuio.uio_offset;
+  lock_release(fh->lock);
 
   return 0;
 }
