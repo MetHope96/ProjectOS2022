@@ -6,6 +6,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <errno.h>
+#include <string.h>
 
 #define SUBARGC_MAX 64
 static char *subargv[SUBARGC_MAX];
@@ -27,7 +29,7 @@ int main(void){
         return 1;
     }else if(pid == 0){ // Child
         pid1 = getpid();
-        printf("This is the child process with pid = %d\n and execution of execv",pid1);
+        printf("This is the child process with pid = %d\n and execution of execv(helloworld):\n",pid1);
            
         
         rval = execv(subargv[0], subargv);
