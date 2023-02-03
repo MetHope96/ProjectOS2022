@@ -113,7 +113,7 @@ int sys_open(userptr_t filename, int flags, int *retfd){
 
 int sys_write(int fd, userptr_t buff, size_t buff_len, int *retval){
   int err;
-
+  lock_acquire(curproc->lock);
   lock_acquire(curproc->file_table[fd]->lock);
 
   if (fd < 0 || fd >= OPEN_MAX){
@@ -142,12 +142,13 @@ int sys_write(int fd, userptr_t buff, size_t buff_len, int *retval){
 
   curproc->file_table[fd]->offset = kuio.uio_offset;
   lock_release(curproc->file_table[fd]->lock);
+  lock_release(curproc->lock);
   return 0;
 }
 
 int sys_read(int fd, userptr_t buff, size_t buff_len, int *retval){
   int err;
-
+  lock_acquire (curproc->lock);
   lock_acquire (curproc->file_table[fd]->lock);
 
   if (fd < 0 || fd >= OPEN_MAX || curproc->file_table[fd] == NULL){
@@ -175,6 +176,7 @@ int sys_read(int fd, userptr_t buff, size_t buff_len, int *retval){
 
   curproc->file_table[fd]->offset = kuio.uio_offset;
   lock_release(curproc->file_table[fd]->lock);
+  lock_release(curproc->lock);
 
   return 0;
 }
