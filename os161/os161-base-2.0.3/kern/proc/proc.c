@@ -54,7 +54,6 @@
 #include <synch.h>
 #include <kern/unistd.h>
 #include <limits.h>
-#include <file_syscall.h>
 
 /*
  * The process for the kernel; this holds all the kernel-only threads.
@@ -212,7 +211,14 @@ proc_destroy(struct proc *proc)
 			/* file table updare  */
 	for(int i = 0; i < OPEN_MAX; i++) {
 		if(proc->file_table[i] != NULL){
-            sys_close(proc->file_table[i]);
+			lock_acquire(proc->lock);
+            proc->file_table[i]->ref_count -- ;
+ 			if(proc->file_table[i]->ref_count == 0){
+ 				 lock_destroy(proc->file_table[i]->lock);
+  				 vfs_close(proc->file_table[i]->vnode);
+  				 kfree(proc->file_table[i]);
+  			}
+			lock_release(proc->lock);
 			proc->file_table[i] = NULL;
 		}
     }
