@@ -212,8 +212,8 @@ proc_destroy(struct proc *proc)
 			/* file table updare  */
 	for(int i = 0; i < OPEN_MAX; i++) {
 		if(proc->file_table[i] != NULL){
-            sys_close(file_table[i]);
-			curproc->file_table[i] = NULL;
+            sys_close(proc->file_table[i]);
+			proc->file_table[i] = NULL;
 		}
     }
 
