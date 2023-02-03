@@ -39,7 +39,7 @@ int main(void){
         waitpid(pid, &status, 0);
         waitpid(pid2, &status, 0);
         pid1 = getpid();
-        printf("This the parent process with pid = %d\n",pid1,);
+        printf("This the parent process with pid = %d\n",pid1);
         return 0;
         }
     }
