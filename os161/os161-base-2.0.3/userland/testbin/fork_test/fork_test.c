@@ -11,8 +11,6 @@ int main ()
 {
 
     pid_t pid1, pid2, pid3;
-    int i;
-
         
         pid1 = fork();
         
@@ -50,8 +48,6 @@ int main ()
                 }
                 else{
                 printf ("%d\n", getpid());
-                while (1);
-                  
                 }
 
             
