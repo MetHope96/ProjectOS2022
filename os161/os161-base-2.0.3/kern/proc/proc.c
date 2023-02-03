@@ -211,7 +211,6 @@ proc_destroy(struct proc *proc)
 			/* file table updare  */
 	for(int i = 0; i < OPEN_MAX; i++) {
 		if(proc->file_table[i] != NULL){
-			lock_acquire(proc->lock);
             proc->file_table[i]->ref_count -- ;
  			if(proc->file_table[i]->ref_count == 0){
  				 lock_destroy(proc->file_table[i]->lock);
@@ -219,7 +218,6 @@ proc_destroy(struct proc *proc)
   				 kfree(proc->file_table[i]);
 				 proc->file_table[i] = NULL;
   			}
-			lock_release(proc->lock);
 		}
     }
 
