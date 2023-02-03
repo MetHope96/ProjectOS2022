@@ -216,8 +216,8 @@ proc_destroy(struct proc *proc)
  				 lock_destroy(proc->file_table[i]->lock);
   				 vfs_close(proc->file_table[i]->vnode);
   				 kfree(proc->file_table[i]);
-				 proc->file_table[i] = NULL;
   			}
+			proc->file_table[i] = NULL;
 		}
     }
 
