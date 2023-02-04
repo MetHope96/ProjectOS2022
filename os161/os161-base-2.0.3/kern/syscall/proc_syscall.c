@@ -148,7 +148,7 @@ int sys_waitpid(pid_t pid, int *status, int options, pid_t* retval) {
 
 int sys_execv(char *program, char **args){
 
-    int err, argc=0, padding=0;
+    int err, argc=0, pad=0;
     int args_size=0; // Total size of kernel buffer (args size + pointers size)
     struct vnode *vn;
     struct addrspace *as;
@@ -173,8 +173,8 @@ int sys_execv(char *program, char **args){
         args_size += sizeof(char)*(arglen);
         // Compute n. of 0s for padding (if needed)
         if((arglen%4) != 0){
-            padding = 4 - arglen%4;
-            args_size += padding;
+            pad = 4 - arglen%4;
+            args_size += pad;
         }
         // The total size of the argument strings exceeeds ARG_MAX.
         if(args_size > ARG_MAX){
@@ -226,8 +226,8 @@ int sys_execv(char *program, char **args){
         // If the argument string has no exactly 4 bytes 0-padding is needed
         if((arglen%4) != 0){
             // n. of bytes to pad
-            padding = 4 - arglen%4;
-            for(int j=0;j<padding;j++){
+            pad = 4 - arglen%4;
+            for(int j=0;j<pad;j++){
                 // Move on the pointer by following the 0s added
                 kargs_ptr += j; 
                 // Add the \0
