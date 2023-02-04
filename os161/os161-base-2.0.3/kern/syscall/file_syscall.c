@@ -62,7 +62,7 @@ int sys_open(userptr_t filename, int flags, int *retfd){
   }
   
   int i=3;
-
+    //Find the first empty slot of file table
     while (curproc->file_table[i] != NULL){
       if (i == OPEN_MAX-1){
         return EMFILE; //The process's file table was full, or a process-specific limit on open files was reached.
@@ -70,7 +70,9 @@ int sys_open(userptr_t filename, int flags, int *retfd){
       i++;
     }
 
+    //Create the memory location for the element of file table
     curproc->file_table[i] = (struct file_handle *)kmalloc(sizeof(struct file_handle));
+    //Effective open of the file
     err = vfs_open(kfilename, flags, 0664, &curproc->file_table[i]->vnode);
 
     if (err){
@@ -83,18 +85,19 @@ int sys_open(userptr_t filename, int flags, int *retfd){
 
     if(append){ // The file is open in append mode
       struct stat statbuf;
+      //get file information and offset
       err = VOP_STAT(curproc->file_table[i]->vnode, &statbuf);
       if (err){
         kfree (curproc->file_table[i]);
         curproc->file_table[i] = NULL;
         return err;
       }
-      curproc->file_table[i]->offset = statbuf.st_size;
+      curproc->file_table[i]->offset = statbuf.st_size; //offset update
 
     } else { //The file isn't open in append mode
     curproc->file_table[i]->offset = 0;
     }
-    
+    //Initialization
     curproc->file_table[i]->ref_count = 1;
     curproc->file_table[i]->flags = flags;
     curproc->file_table[i]->lock = lock_create("lock_fh"); //Create a lock for a file_handle
@@ -133,21 +136,21 @@ int sys_write(int fd, userptr_t buff, size_t buff_len, int *retval){
         return err;
   }
   
-  struct iovec iov;
-  struct uio kuio;
+  struct iovec iov;//iovec structure, used in the readv/writev scatter/gather I/O calls, and within the kernel for keeping track of blocks of data for I/O.
+  struct uio kuio;//Describe I/O operation
 
-  uio_kinit(&iov, &kuio, buff, buff_len, fh->offset, UIO_WRITE);
+  uio_kinit(&iov, &kuio, buff, buff_len, fh->offset, UIO_WRITE); //Initialization uio struct
   kuio.uio_space = p->p_addrspace;
   kuio.uio_segflg = UIO_USERSPACE; // for user space address 
 
-  err = VOP_WRITE (fh->vnode, &kuio);
+  err = VOP_WRITE (fh->vnode, &kuio);//Effective write
   if (err){
     return err;
   }
 
-  *retval = buff_len - kuio.uio_resid; //calculate the amount of bytes written. 0 in case of success.
+  *retval = buff_len - kuio.uio_resid; //calculate the amount of bytes written. buff_len in case of success.
 
-  fh->offset = kuio.uio_offset;
+  fh->offset = kuio.uio_offset;//Update offset
   lock_release(fh->lock);
   return 0;
 }
@@ -172,22 +175,22 @@ int sys_read(int fd, userptr_t buff, size_t buff_len, int *retval){
     return EFAULT; // Part or all of the address space pointed to by buf is invalid.
   }
 
-  struct iovec iov;
-  struct uio kuio;
+  struct iovec iov;//iovec structure, used in the readv/writev scatter/gather I/O calls, and within the kernel for keeping track of blocks of data for I/O.
+  struct uio kuio;//Describe I/O operation
 
-  uio_kinit(&iov, &kuio, buff, buff_len, fh->offset, UIO_READ);
+  uio_kinit(&iov, &kuio, buff, buff_len, fh->offset, UIO_READ);//Initialization uio struct
   kuio.uio_space = p->p_addrspace;
   kuio.uio_segflg = UIO_USERSPACE; // for user space address 
 
-  err = VOP_READ(fh->vnode, &kuio);
+  err = VOP_READ(fh->vnode, &kuio);//Effective read
   if (err){
 	 lock_release(fh->lock);
 	 return err;
   }
 
-  *retval = buff_len - kuio.uio_resid; //calculate the amount of bytes written. 0 in case of success.
+  *retval = buff_len - kuio.uio_resid; //calculate the amount of bytes written. buff_len in case of success.
 
-  fh->offset = kuio.uio_offset;
+  fh->offset = kuio.uio_offset;//Update offset
   lock_release(fh->lock);
 
   return 0;
@@ -203,6 +206,7 @@ int sys_close(int fd){
 
   curproc->file_table[fd]->ref_count -- ;
 
+//Destroy element of file table
   if(curproc->file_table[fd]->ref_count == 0){
   lock_destroy(curproc->file_table[fd]->lock);
   vfs_close(curproc->file_table[fd]->vnode);
@@ -257,7 +261,7 @@ int sys_lseek(int fd, off_t pos, int whence, off_t *retval){
       break;
 
     case SEEK_END:
-    VOP_STAT(curproc->file_table[fd]->vnode, &buffer);
+    VOP_STAT(curproc->file_table[fd]->vnode, &buffer);//get file information and offset
     endPointer = buffer.st_size;
     posPointer = endPointer + pos;
 
@@ -288,7 +292,7 @@ int
 sys_dup2(int oldfd, int newfd, int *retval){
   int err;
 
-  if(oldfd < 0 || newfd < 0 || oldfd >= OPEN_MAX || newfd >= OPEN_MAX){
+  if(oldfd < 0 || newfd < 0 || oldfd >= OPEN_MAX || newfd >= OPEN_MAX){//Check valid fd
     err = EBADF;
     return err;
   }
@@ -304,8 +308,8 @@ sys_dup2(int oldfd, int newfd, int *retval){
       return err;
   }
 
-  curproc->file_table[newfd] = curproc->file_table[oldfd];
-  curproc->file_table[oldfd]->ref_count++;
+  curproc->file_table[newfd] = curproc->file_table[oldfd];//new fd element points the same element of oldfd 
+  curproc->file_table[oldfd]->ref_count++;//Update ref_count
   
   *retval = newfd;
   return 0;
@@ -324,12 +328,12 @@ sys_chdir(userptr_t path, int *retval){
         return err;
     }
 
-    if(path != NULL && strlen((char*)path) > PATH_MAX){
+    if(path != NULL && strlen((char*)path) > PATH_MAX){//Check valid path name
         err = ENAMETOOLONG;
         return err;
     }
     
-    len = strlen((char*)path) + 1;
+    len = strlen((char*)path) + 1;//lenght of path name
 
     k_buf = kmalloc(len * sizeof(char));
     if(k_buf == NULL){
@@ -343,17 +347,17 @@ sys_chdir(userptr_t path, int *retval){
         return err;
     }
 
-    err = vfs_open( k_buf, O_RDONLY, 0644, &dir_vn );
-	if( err ){
+    err = vfs_open( k_buf, O_RDONLY, 0644, &dir_vn ); //open directory vnode
+	  if( err ){
         kfree(k_buf);
         return err;
     }else{
       *retval = 0;
     }
 
-    err = vfs_setcurdir( dir_vn );
+    err = vfs_setcurdir( dir_vn );//Set current directory as a vnode
 
-	vfs_close( dir_vn );
+	vfs_close( dir_vn );//close directory vnode
 
 	if( err ){
         kfree(k_buf);
@@ -373,20 +377,18 @@ int sys___getcwd(userptr_t buf, size_t buf_len, int *retval){
     KASSERT(curthread != NULL);
     KASSERT(curproc != NULL );
 
-    // - buf points to an invalid address.
+    //Check buf points to a valid address
     if(buf == NULL){
         err = EFAULT;
         return err;
     }
 
-    // Setup the uio record (use a proper function to init all fields)
+    //Initialization uio struct
 	uio_kinit(&iov, &kuio, buf, buf_len, 0, UIO_READ);
   kuio.uio_space = curproc->p_addrspace;
 	kuio.uio_segflg = UIO_USERSPACE; // for user space address
 
-    // Retrieve the uio struct associated with the current directory
-    // (containing vnode and string with pathname)
-    err = vfs_getcwd(&kuio);
+    err = vfs_getcwd(&kuio);//Effective getcwd
     if(err)
         return err;
 

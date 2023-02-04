@@ -17,7 +17,7 @@
 
 
 int sys_getpid(pid_t *curproc_pid) {
-	*curproc_pid = curproc->proc_id;
+	*curproc_pid = curproc->proc_id; //Return the pid
 	return 0;
 }
 
@@ -31,22 +31,22 @@ int sys_fork(pid_t *child_pid, struct trapframe *tf){
     return ENPROC; //There are too many process on the system.
   }
 
-  child_proc = proc_create("child_proc");
+  child_proc = proc_create("child_proc");//return a new process
 
   if(child_proc == NULL){
     return ENOMEM; //Sufficient virtual memory for the new process was not available.
   }
 
-  child_proc->parent_id = curproc->proc_id;
+  child_proc->parent_id = curproc->proc_id; //Update parent process
 
     spinlock_acquire(&curproc->p_lock);
       if (curproc->p_cwd != NULL) {
             VOP_INCREF(curproc->p_cwd);
-            child_proc->p_cwd = curproc->p_cwd;
+            child_proc->p_cwd = curproc->p_cwd; //Copy the current directory
       }
     spinlock_release(&curproc->p_lock);
 
-    as_copy(proc_getas(), &(child_proc->p_addrspace));
+    as_copy(proc_getas(), &(child_proc->p_addrspace)); //Address space copy
     if(child_proc->p_addrspace == NULL){
     proc_destroy(child_proc); 
     return ENOMEM; 
@@ -57,10 +57,9 @@ int sys_fork(pid_t *child_pid, struct trapframe *tf){
     return ENOMEM; //Sufficient virtual memory for the new process was not available.
     }
 
-	*tf_child = *tf;
+	*tf_child = *tf; //child trapframe = parent trapframe 
 
-  /*Since the parent and child have the same file table: */
-
+  /*Copy of open elements file table: */
   for(int i = 0; i < OPEN_MAX; i++){
     if(curproc->file_table[i] != NULL){
       lock_acquire(curproc->file_table[i]->lock);//Lock the filetablei[i]
@@ -77,14 +76,14 @@ int sys_fork(pid_t *child_pid, struct trapframe *tf){
         return err;
     }
 
-/*Set the return value as a child_PID */
+/*Set the return value as a child_pid */
   *child_pid = child_proc->proc_id;
   return 0;
 }
 
 void sys_exit(int exitcode){
 	int i = 0;
-
+//Find the index of curproc in the proc table
 	for(i = 0; i < MAX_PROC; i++){
 		if(proc_table[i] != NULL){
 			if(proc_table[i]->proc_id == curproc->proc_id){
@@ -101,7 +100,7 @@ void sys_exit(int exitcode){
 	curproc->exit_code = exitcode;
 	KASSERT(curproc->exit_status == proc_table[i]->exit_status);
 	KASSERT(curproc->exit_code == proc_table[i]->exit_code);
-	cv_signal(curproc->cv, curproc->lock);
+	cv_signal(curproc->cv, curproc->lock);// Wake up one thread that's sleeping on this CV.
 	lock_release(curproc->lock);
 
 
@@ -117,7 +116,7 @@ int sys_waitpid(pid_t pid, int *status, int options, pid_t* retval) {
 	if(curproc->proc_id == pid){
 		return ECHILD;
 	}
-	
+	//Check pid is present in proc_table
 	for(i = 0; i < MAX_PROC; i++){
 		if(proc_table[i] != NULL){
 			if(proc_table[i]->proc_id == pid)
@@ -134,12 +133,12 @@ int sys_waitpid(pid_t pid, int *status, int options, pid_t* retval) {
 	KASSERT(proc_table[i] != NULL);
 	lock_acquire(proc_table[i]->lock);
 
-	cv_wait(proc_table[i]->cv, proc_table[i]->lock);
+	cv_wait(proc_table[i]->cv, proc_table[i]->lock); //Release the supplied lock, go to sleep, and, after waking up again, re-acquire the lock.
 
 	lock_release(proc_table[i]->lock);
 	*retval = proc_table[i]->proc_id;
 
-  *status = proc_table[i]->exit_code;
+    *status = proc_table[i]->exit_code;
 
 	proc_destroy(proc_table[i]);
 

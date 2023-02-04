@@ -76,7 +76,7 @@ struct proc {
 	struct vnode *p_cwd;		/* current working directory */
 
 	/* add more material here as needed */
-	struct file_handle *file_table[OPEN_MAX];
+	struct file_handle *file_table[OPEN_MAX]; //file table
 	pid_t proc_id; //pid
 	pid_t parent_id;//ppid
 	bool exit_status;

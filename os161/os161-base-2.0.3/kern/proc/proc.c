@@ -82,8 +82,8 @@ proc_create(const char *name)
 
 	proc->p_numthreads = 0;
 	spinlock_init(&proc->p_lock);
-	proc->lock = lock_create("proc_lock");
-	proc->cv = cv_create("proc_cv");
+	proc->lock = lock_create("proc_lock"); //lock creation
+	proc->cv = cv_create("proc_cv"); //cv creation
 
 	/* VM fields */
 	proc->p_addrspace = NULL;
@@ -99,7 +99,7 @@ proc_create(const char *name)
 	proc->exit_status = false;
 	proc->exit_code = -1;
 
-	/*Defined the initial value */
+	/*Defined the initial value for kernel proc */
 	if(strcmp(name,"[kernel]") == 0){
 		proc->proc_id = 1;
 		proc->parent_id = 0;
@@ -117,7 +117,7 @@ proc_create(const char *name)
 		if(index_proc_table == 1){
 			proc->parent_id = 1;
 		}
-		proc_table[index_proc_table] = proc;
+		proc_table[index_proc_table] = proc;//proc_table update
 		proc_counter++;
 	}
 
@@ -208,7 +208,7 @@ proc_destroy(struct proc *proc)
 	spinlock_cleanup(&proc->p_lock);
 	lock_destroy(proc->lock);
 	cv_destroy(proc->cv);
-			/* file table updare  */
+			/* file table update  */
 	for(int i = 0; i < OPEN_MAX; i++) {
 		if(proc->file_table[i] != NULL){
             proc->file_table[i]->ref_count -- ;
@@ -220,7 +220,7 @@ proc_destroy(struct proc *proc)
 			proc->file_table[i] = NULL;
 		}
     }
-
+    //remove proc_table element
 	for(int i = 0; i < MAX_PROC; i++){
 		if(proc_table[i] != NULL){
 			if(proc_table[i]->proc_id == proc->proc_id){
@@ -278,7 +278,7 @@ proc_create_runprogram(const char *name)
 	spinlock_acquire(&curproc->p_lock);
 	if (curproc->p_cwd != NULL) {
 		VOP_INCREF(curproc->p_cwd);
-		newproc->p_cwd = curproc->p_cwd;
+		newproc->p_cwd = curproc->p_cwd;//current directory update
 	}
 	spinlock_release(&curproc->p_lock);
 	return newproc;
