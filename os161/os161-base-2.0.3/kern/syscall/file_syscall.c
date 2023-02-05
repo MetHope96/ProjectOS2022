@@ -19,6 +19,7 @@
 int sys_open(userptr_t filename, int flags, int *retfd){
   bool append = false; // This is 0 if is not open in append mode
   int err = 0;
+  struct proc *p = curproc;
 
   char *kfilename;
 
@@ -63,7 +64,7 @@ int sys_open(userptr_t filename, int flags, int *retfd){
   
   int i=3;
     //Find the first empty slot of file table
-    while (curproc->file_table[i] != NULL){
+    while (p->file_table[i] != NULL){
       if (i == OPEN_MAX-1){
         return EMFILE; //The process's file table was full, or a process-specific limit on open files was reached.
       }
@@ -71,43 +72,43 @@ int sys_open(userptr_t filename, int flags, int *retfd){
     }
 
     //Create the memory location for the element of file table
-    curproc->file_table[i] = (struct file_handle *)kmalloc(sizeof(struct file_handle));
+    p->file_table[i] = (struct file_handle *)kmalloc(sizeof(struct file_handle));
     //Effective open of the file
-    err = vfs_open(kfilename, flags, 0664, &curproc->file_table[i]->vnode);
+    err = vfs_open(kfilename, flags, 0664, &p->file_table[i]->vnode);
 
     if (err){
-      kfree(curproc->file_table[i]);
-      curproc->file_table[i]=NULL;
+      kfree(p->file_table[i]);
+      p->file_table[i]=NULL;
       return err;
     } 
 
-    lock_acquire(curproc->lock);
+    lock_acquire(p->lock);
 
     if(append){ // The file is open in append mode
       struct stat statbuf;
       //get file information and offset
-      err = VOP_STAT(curproc->file_table[i]->vnode, &statbuf);
+      err = VOP_STAT(p->file_table[i]->vnode, &statbuf);
       if (err){
-        kfree (curproc->file_table[i]);
-        curproc->file_table[i] = NULL;
+        kfree (p->file_table[i]);
+        p->file_table[i] = NULL;
         return err;
       }
-      curproc->file_table[i]->offset = statbuf.st_size; //offset update
+      p->file_table[i]->offset = statbuf.st_size; //offset update
 
     } else { //The file isn't open in append mode
-    curproc->file_table[i]->offset = 0;
+    p->file_table[i]->offset = 0;
     }
     //Initialization
-    curproc->file_table[i]->ref_count = 1;
-    curproc->file_table[i]->flags = flags;
-    curproc->file_table[i]->lock = lock_create("lock_fh"); //Create a lock for a file_handle
-    if(curproc->file_table[i]->lock == NULL) {
-      vfs_close(curproc->file_table[i]->vnode);
-    	kfree(curproc->file_table[i]);
-    	curproc->file_table[i] = NULL;
+    p->file_table[i]->ref_count = 1;
+    p->file_table[i]->flags = flags;
+    p->file_table[i]->lock = lock_create("lock_fh"); //Create a lock for a file_handle
+    if(p->file_table[i]->lock == NULL) {
+      vfs_close(p->file_table[i]->vnode);
+    	kfree(p->file_table[i]);
+    	p->file_table[i] = NULL;
     }
 
-    lock_release(curproc->lock);
+    lock_release(p->lock);
 
       *retfd = i;
     	return 0;
@@ -197,93 +198,93 @@ int sys_read(int fd, userptr_t buff, size_t buff_len, int *retval){
 }
 
 int sys_close(int fd){
+  struct proc *p = curproc;
+  lock_acquire(p->lock);
 
-  lock_acquire(curproc->lock);
-
-  if (fd < 0 || fd >= OPEN_MAX || curproc->file_table[fd] == NULL){
+  if (fd < 0 || fd >= OPEN_MAX || p->file_table[fd] == NULL){
     return EBADF; // Fd is not a valid file descriptor
   }
 
-  curproc->file_table[fd]->ref_count -- ;
+  p->file_table[fd]->ref_count -- ;
 
 //Destroy element of file table
-  if(curproc->file_table[fd]->ref_count == 0){
-  lock_destroy(curproc->file_table[fd]->lock);
-  vfs_close(curproc->file_table[fd]->vnode);
-  kfree(curproc->file_table[fd]);
-	curproc->file_table[fd] = NULL;
+  if(p->file_table[fd]->ref_count == 0){
+  lock_destroy(p->file_table[fd]->lock);
+  vfs_close(p->file_table[fd]->vnode);
+  kfree(p->file_table[fd]);
+	p->file_table[fd] = NULL;
   }
 
-  lock_release(curproc->lock);
+  lock_release(p->lock);
 
   return 0;
 }
 
 
 int sys_lseek(int fd, off_t pos, int whence, off_t *retval){
-
+  struct proc *p = curproc;
   struct stat buffer;
 
   off_t currentPointer;
   off_t endPointer;
   off_t posPointer;
 
-  if (fd < 0 || fd >= OPEN_MAX || curproc->file_table[fd] == NULL){
+  if (fd < 0 || fd >= OPEN_MAX || p->file_table[fd] == NULL){
     return EBADF; //Fd is not a valid file descriptor
   }
 
-  lock_acquire(curproc->file_table[fd]->lock); //lock the file
+  lock_acquire(p->file_table[fd]->lock); //lock the file
 
   switch(whence) {
     case SEEK_SET:
       if (pos < 0){
-        lock_release(curproc->file_table[fd]->lock);
+        lock_release(p->file_table[fd]->lock);
         return EINVAL; // A negative value of seek position
       }
 
       posPointer = pos;
 
-      curproc->file_table[fd]->offset = posPointer;
+      p->file_table[fd]->offset = posPointer;
       *retval = posPointer;
       break;
 
     case SEEK_CUR:
-      currentPointer = curproc->file_table[fd]->offset;
+      currentPointer = p->file_table[fd]->offset;
       posPointer = currentPointer + pos;
 
       if (posPointer < 0){
-        lock_release(curproc->file_table[fd]->lock);
+        lock_release(p->file_table[fd]->lock);
         return EINVAL; // A negative value of seek position
       }
 
-      curproc->file_table[fd]->offset = posPointer;
+      p->file_table[fd]->offset = posPointer;
       *retval = posPointer;
       break;
 
     case SEEK_END:
-    VOP_STAT(curproc->file_table[fd]->vnode, &buffer);//get file information and offset
+    VOP_STAT(p->file_table[fd]->vnode, &buffer);//get file information and offset
     endPointer = buffer.st_size;
-    posPointer = endPointer + pos;
+    posPointer = endPointer;
 
-    if (posPointer < 0){
-      lock_release(curproc->file_table[fd]->lock);
+    if (posPointer + pos < 0){
+      lock_release(p->file_table[fd]->lock);
       return EINVAL; // A negative value of seek position
     }
 
     if (pos < 0) {
-      curproc->file_table[fd]->offset = posPointer + pos; //Came back by EOF of abs(pos)
+      p->file_table[fd]->offset = posPointer + pos; //Came back by EOF of abs(pos)
     } else {
-      curproc->file_table[fd]->offset = posPointer; //Is equal to position of EOF
+      p->file_table[fd]->offset = endPointer; //Is equal to position of EOF
     }
 
-    *retval = curproc->file_table[fd]->offset; //Return posPointer + pos or posPointer depend of the case
+    *retval = p->file_table[fd]->offset; //Return posPointer + pos or posPointer depend of the case
     break;
 
     default:
       return EINVAL; // A negative value of seek position
   }
 
-  lock_release(curproc->file_table[fd]->lock);
+  lock_release(p->file_table[fd]->lock);
   return 0;
 
 }
@@ -291,6 +292,7 @@ int sys_lseek(int fd, off_t pos, int whence, off_t *retval){
 int 
 sys_dup2(int oldfd, int newfd, int *retval){
   int err;
+  struct proc *p = curproc;
 
   if(oldfd < 0 || newfd < 0 || oldfd >= OPEN_MAX || newfd >= OPEN_MAX){//Check valid fd
     err = EBADF;
@@ -302,14 +304,14 @@ sys_dup2(int oldfd, int newfd, int *retval){
       return 0;
   }
 
-  if(curproc->file_table[newfd] != NULL){
+  if(p->file_table[newfd] != NULL){
     err = sys_close(newfd);
     if(err)
       return err;
   }
 
-  curproc->file_table[newfd] = curproc->file_table[oldfd];//new fd element points the same element of oldfd 
-  curproc->file_table[oldfd]->ref_count++;//Update ref_count
+  p->file_table[newfd] = p->file_table[oldfd];//new fd element points the same element of oldfd 
+  p->file_table[oldfd]->ref_count++;//Update ref_count
   
   *retval = newfd;
   return 0;
@@ -372,7 +374,7 @@ int sys___getcwd(userptr_t buf, size_t buf_len, int *retval){
     int err;
     struct uio kuio;
     struct iovec iov;
-    
+    struct proc *p = curproc;
 
     KASSERT(curthread != NULL);
     KASSERT(curproc != NULL );
@@ -385,7 +387,7 @@ int sys___getcwd(userptr_t buf, size_t buf_len, int *retval){
 
     //Initialization uio struct
 	uio_kinit(&iov, &kuio, buf, buf_len, 0, UIO_READ);
-  kuio.uio_space = curproc->p_addrspace;
+  kuio.uio_space = p->p_addrspace;
 	kuio.uio_segflg = UIO_USERSPACE; // for user space address
 
     err = vfs_getcwd(&kuio);//Effective getcwd
@@ -407,10 +409,14 @@ std_open(int fileno){
   int fd;
   int err, flags;
   const char* filename = "con:";
+  struct proc *p = curproc;
 
-  char file_name[5];
+  char *kfilename;
 
-  strcpy(file_name, filename);
+  kfilename = kstrdup((char *)filename);
+    if(kfilename==NULL){
+        return ENOMEM;
+    }
 
   switch(fileno){
     case STDIN_FILENO:
@@ -430,26 +436,26 @@ std_open(int fileno){
       break;
   }
 
-    curproc->file_table[fd] = (struct file_handle *)kmalloc(sizeof(struct file_handle));
-    err = vfs_open(file_name, flags, 0, &curproc->file_table[fd]->vnode);
+    p->file_table[fd] = (struct file_handle *)kmalloc(sizeof(struct file_handle));
+    err = vfs_open(kfilename, flags, 0, &p->file_table[fd]->vnode);
 
     if (err){
-      kfree(curproc->file_table[fd]);
-      curproc->file_table[fd]=NULL;
+      kfree(p->file_table[fd]);
+      p->file_table[fd]=NULL;
       return err;
     }
 
-    lock_acquire(curproc->lock);
-    curproc->file_table[fd]->ref_count = 1;
-    curproc->file_table[fd]->offset = 0;
-    curproc->file_table[fd]->flags = flags;
-    curproc->file_table[fd]->lock = lock_create("lock_fh"); //Create a lock for a file_handle
-    if(curproc->file_table[fd]->lock == NULL) {
-      vfs_close(curproc->file_table[fd]->vnode);
-    	kfree(curproc->file_table[fd]);
-    	curproc->file_table[fd] = NULL;
+    lock_acquire(p->lock);
+    p->file_table[fd]->ref_count = 1;
+    p->file_table[fd]->offset = 0;
+    p->file_table[fd]->flags = flags;
+    p->file_table[fd]->lock = lock_create("lock_fh"); //Create a lock for a file_handle
+    if(p->file_table[fd]->lock == NULL) {
+      vfs_close(p->file_table[fd]->vnode);
+    	kfree(p->file_table[fd]);
+    	p->file_table[fd] = NULL;
     }
-    lock_release(curproc->lock);
+    lock_release(p->lock);
 
   return fd;
 
