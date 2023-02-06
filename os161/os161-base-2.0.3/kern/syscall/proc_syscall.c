@@ -126,7 +126,7 @@ int sys_waitpid(pid_t pid, int *status, int options, pid_t *retval)
 
     int i = 0;
     struct proc *p = curproc;
-    struct proc *child_p = NULL;
+    struct proc *child_p;
 
     if (options != 0)
     {
