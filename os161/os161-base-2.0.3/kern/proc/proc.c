@@ -208,7 +208,8 @@ proc_destroy(struct proc *proc)
 	spinlock_cleanup(&proc->p_lock);
 	lock_destroy(proc->lock);
 	cv_destroy(proc->cv);
-			/* file table update  */
+	/*
+			//file table update  
 	for(int i = 0; i < OPEN_MAX; i++) {
 		if(proc->file_table[i] != NULL){
             proc->file_table[i]->ref_count -- ;
@@ -220,6 +221,8 @@ proc_destroy(struct proc *proc)
 			proc->file_table[i] = NULL;
 		}
     }
+	*/
+
 	    //remove proc_table element
 	for(int i = 0; i < MAX_PROC; i++){
 		if(proc_table[i] != NULL){
