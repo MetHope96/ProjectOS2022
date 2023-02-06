@@ -137,7 +137,7 @@ common_prog(int nargs, char **args)
 	 */
 	
 	int err = 0, status = 0;
-	result = sys_waitpid(1, &status, 0, &err);
+	result = sys_waitpid(proc->proc_id, &status, 0, &err);
 	if(result < 0){
 		kprintf("waitpid failed: %s\n", strerror(err));
 		proc_destroy(proc);
