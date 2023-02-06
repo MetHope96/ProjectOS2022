@@ -206,19 +206,19 @@ int sys_execv(char *program, char **args){
     kargs = (char **)kmalloc(args_size);
 
     // The starting position is over the arg pointers
-    kargs_ptr_start = (char *)(kargs + argc + 1); // e.g. A + 16
+    kargs_ptr_start = (char *)(kargs + argc + 1); 
 
     // Initialize the pointer to move inside kernel buffer
     kargs_ptr = kargs_ptr_start;
 
     // Fill the kernel buffer
-    for(int i=0;i<argc;i++){ // e.g. the args are "foo\0" "hello!\0" "1\0"
+    for(int i=0;i<argc;i++){ 
         
         // - Copy the arguments pointers into kernel buffer
         kargs[i] = kargs_ptr;
 
         // - Copy the arguments into kernel buffer
-        err = copyinstr((const_userptr_t)args[i], kargs_ptr, ARG_MAX, &arglen); // e.g. arglen = 4, 7, 2
+        err = copyinstr((const_userptr_t)args[i], kargs_ptr, ARG_MAX, &arglen); 
         if(err){
             return err;
         }
@@ -232,7 +232,7 @@ int sys_execv(char *program, char **args){
             pad = 4 - arglen%4;
             for(int j=0;j<pad;j++){
                 // Move on the pointer by following the 0s added
-                kargs_ptr += j; 
+                kargs_ptr += 1; 
                 // Add the \0
                 memcpy(kargs_ptr,"\0",1);
             }
