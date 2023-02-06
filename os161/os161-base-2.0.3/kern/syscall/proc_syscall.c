@@ -104,7 +104,7 @@ void sys_exit(int exitcode){
 	KASSERT(p->exit_code == proc_table[i]->exit_code);
 	cv_signal(p->cv, p->lock);// Wake up one thread that's sleeping on this CV.
 	lock_release(p->lock);
-    proc_table[i]=NULL;
+
 
 	thread_exit();
 }
@@ -113,7 +113,6 @@ int sys_waitpid(pid_t pid, int *status, int options, pid_t* retval) {
 
 	int i = 0;
     struct proc *p = curproc;
-    struct proc *child_p;
 
 	if(options != 0){
 		return EINVAL;
@@ -131,23 +130,21 @@ int sys_waitpid(pid_t pid, int *status, int options, pid_t* retval) {
 		return ESRCH;
 	}
 
-    child_p = proc_table[i];
-
-	if(child_p ->parent_id != p->proc_id){
+	if(proc_table[i]->parent_id != p->proc_id){
 		return ECHILD;
 	}
 	
-	KASSERT(child_p != NULL);
-	lock_acquire(child_p->lock);
+	KASSERT(proc_table[i] != NULL);
+	lock_acquire(proc_table[i]->lock);
 
-	cv_wait(child_p->cv, child_p->lock); //Release the supplied lock, go to sleep, and, after waking up again, re-acquire the lock.
+	cv_wait(proc_table[i]->cv, proc_table[i]->lock); //Release the supplied lock, go to sleep, and, after waking up again, re-acquire the lock.
 
-	lock_release(child_p->lock);
-	*retval = child_p->proc_id;
+	lock_release(proc_table[i]->lock);
+	*retval = proc_table[i]->proc_id;
 
-    *status = child_p->exit_code;
+    *status = proc_table[i]->exit_code;
 
-	proc_destroy(child_p);
+	proc_destroy(proc_table[i]);
 
 	return 0;
 }
@@ -209,19 +206,19 @@ int sys_execv(char *program, char **args){
     kargs = (char **)kmalloc(args_size);
 
     // The starting position is over the arg pointers
-    kargs_ptr_start = (char *)(kargs + argc + 1);
+    kargs_ptr_start = (char *)(kargs + argc + 1); // e.g. A + 16
 
     // Initialize the pointer to move inside kernel buffer
     kargs_ptr = kargs_ptr_start;
 
     // Fill the kernel buffer
-    for(int i=0;i<argc;i++){ 
+    for(int i=0;i<argc;i++){ // e.g. the args are "foo\0" "hello!\0" "1\0"
         
         // - Copy the arguments pointers into kernel buffer
         kargs[i] = kargs_ptr;
 
         // - Copy the arguments into kernel buffer
-        err = copyinstr((const_userptr_t)args[i], kargs_ptr, ARG_MAX, &arglen); 
+        err = copyinstr((const_userptr_t)args[i], kargs_ptr, ARG_MAX, &arglen); // e.g. arglen = 4, 7, 2
         if(err){
             return err;
         }
@@ -297,7 +294,8 @@ int sys_execv(char *program, char **args){
     // Copy the whole kernel buffer into user stack
     copyout(kargs, (userptr_t)stackptr, args_size);
 
-    enter_new_process(argc , (userptr_t)stackptr ,NULL ,
+    enter_new_process(argc /*argc*/, (userptr_t)stackptr /*userspace addr of argv*/,
+			  NULL /*userspace addr of environment*/,
 			  stackptr, entrypoint);
 
     // enter_new_process does not return
