@@ -17,8 +17,12 @@ static char *subargv[SUBARGC_MAX];
 int main(){
 		
 	
-    static char default_prog[] = "/testbin/helloworld";
+    static char default_prog[] = "/testbin/argtest";
+    static char arg1_prog[] = "arg1";
+    static char arg2_prog[] = "arg2";
     subargv[0] = default_prog;
+    subargv[1] = arg1_prog;
+    subargv[2] = arg2_prog;
 
     int rval;
         
