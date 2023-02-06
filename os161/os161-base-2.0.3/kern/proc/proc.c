@@ -220,7 +220,16 @@ proc_destroy(struct proc *proc)
 			proc->file_table[i] = NULL;
 		}
     }
-
+	    //remove proc_table element
+	for(int i = 0; i < MAX_PROC; i++){
+		if(proc_table[i] != NULL){
+			if(proc_table[i]->proc_id == proc->proc_id){
+				proc_table[i] = NULL;
+				break;
+			}
+		}
+	}
+	
 	kfree(proc->p_name);
 	kfree(proc);
 	proc_counter --;
