@@ -17,7 +17,10 @@
 
 int sys_getpid(pid_t *curproc_pid)
 {
-    *curproc_pid = curproc->proc_id; // Return the pid
+    struct proc *p = curproc;
+    lock_acquire(p->lock);
+    *curproc_pid = p->proc_id; // Return the pid
+    lock_release(p->lock);
     return 0;
 }
 
