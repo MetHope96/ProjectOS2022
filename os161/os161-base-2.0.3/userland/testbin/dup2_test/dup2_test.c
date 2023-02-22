@@ -1,5 +1,5 @@
 /*
-* lseek_test.c
+* dup2_test.c
 * 1) Create and write wr_test.txt
 * 2) dup2
 * 3) Read dup2 file in RDONLY mode wr_test.txt
